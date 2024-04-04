@@ -3,6 +3,7 @@ package top.srcres.mods.modelassetlib
 import net.minecraft.client.Minecraft
 import net.neoforged.fml.common.Mod
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
 
@@ -10,7 +11,7 @@ import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
 object ModelAssetLib {
     const val MODID = "modelassetlib"
 
-    val logger = LoggerFactory.getLogger(MODID)
+    val logger: Logger = LoggerFactory.getLogger(MODID)
 
     init {
         MOD_BUS.addListener(::onLoadComplete)
