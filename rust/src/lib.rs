@@ -1,7 +1,9 @@
-use ::jni::objects::JObject;
-use ::jni::sys::{jboolean, JNIEnv};
+extern crate jni;
 
-pub mod jni;
+use jni::objects::JObject;
+use jni::sys::{jboolean, JNIEnv};
+
+pub mod util;
 
 #[no_mangle]
 pub extern "system" fn Java_top_srcres_mods_modelassetlib_NativeLibrary_initNative0<'local>(
@@ -9,5 +11,5 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_NativeLibrary_initNati
     this: JObject<'local>
 ) -> jboolean {
     println!("Native library initialized.");
-    crate::jni::bool_to_jboolean(true)
+    util::bool_to_jboolean(true)
 }

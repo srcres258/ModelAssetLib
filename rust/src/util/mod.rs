@@ -1,5 +1,3 @@
-extern crate jni;
-
 use jni::sys::jboolean;
 
 pub fn bool_to_jboolean(val: bool) -> jboolean {
