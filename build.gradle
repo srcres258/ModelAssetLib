@@ -1,3 +1,6 @@
+import java.util.function.Consumer
+import java.util.function.Function
+
 plugins {
     id 'java-library'
     id 'eclipse'
@@ -155,3 +158,53 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+def osLibMap = [
+        "x86_64-unknown-linux-gnu": "libmodelassetlib_native.so", // Linux
+        "x86_64-pc-windows-gnu": "modelassetlib_native.dll", // Windows
+        "x86_64-apple-darwin": "libmodelassetlib_native.dylib", // macOS
+]
+def releaseLib = project.library_release.equalsIgnoreCase("true")
+
+task processNativeLib(type: Task) {
+    def targetPath = ((java.io.File) projectDir).toPath()
+            .resolve("rust").resolve("target")
+    def genResourcesPath = ((java.io.File) projectDir).toPath()
+            .resolve("src").resolve("generated").resolve("resources")
+
+    inputs.dir(targetPath.toFile())
+    outputs.dir(genResourcesPath.toFile())
+
+    doLast {
+        def subDirName = releaseLib ? "release" : "debug"
+        println(String.format("Processing library profile: %s", subDirName))
+
+        def libPathNames = new ArrayList<String>()
+        for (entry in osLibMap) {
+            def libDirPath = targetPath.resolve(entry.key).resolve(subDirName)
+            def libPath = libDirPath.resolve(entry.value)
+            if (!libPath.toFile().exists()) {
+                throw new RuntimeException(String.format(
+                        "The file '%s' does not exist. Make sure the Rust native library is built by build.sh.",
+                        libPath.toAbsolutePath().toString()))
+            }
+            libPathNames.add(libPath.toAbsolutePath().toString())
+        }
+        def destPath = genResourcesPath.resolve("assets").resolve(project.mod_id).resolve("lib")
+        def destFile = destPath.toFile()
+        if (!destFile.exists())
+            if (!destFile.mkdirs())
+                throw new RuntimeException(String.format("The dest directory '%s' does not exists and failure occurred during creating it.",
+                        destPath.toAbsolutePath().toString()))
+        print("Going to copy:")
+        println(libPathNames.toArray())
+        print("into:")
+        println(destPath.toAbsolutePath().toString())
+        copy {
+            from(libPathNames.toArray())
+            into(destPath.toAbsolutePath().toString())
+        }
+    }
+}
+
+processResources.dependsOn(processNativeLib)
