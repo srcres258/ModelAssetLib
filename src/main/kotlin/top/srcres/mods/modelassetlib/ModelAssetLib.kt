@@ -2,7 +2,6 @@ package top.srcres.mods.modelassetlib
 
 import net.minecraft.client.Minecraft
 import net.neoforged.fml.common.Mod
-import net.neoforged.fml.event.lifecycle.FMLConstructModEvent
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent
 import org.slf4j.LoggerFactory
 import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
