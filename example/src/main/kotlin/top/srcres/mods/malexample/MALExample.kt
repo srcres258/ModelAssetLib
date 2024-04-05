@@ -1,5 +1,6 @@
 package top.srcres.mods.malexample
 
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.Entity
 import net.neoforged.fml.InterModComms
 import net.neoforged.fml.common.Mod
@@ -21,8 +22,7 @@ object MALExample {
         logger.info("test message")
 
         ModelAssetLib.addNativeLoadedListener {
-            val data = File("/home/srcres/App/blender-4.0.2-linux-x64/models/Horus/export/Horus.gltf").inputStream().readAllBytes()
-            val model = AssetedEntityModel<Entity>(data)
+            val model = AssetedEntityModel<Entity>(ResourceLocation("malexample", "gltf/horus/horus.gltf"))
             model.close()
         }
     }
