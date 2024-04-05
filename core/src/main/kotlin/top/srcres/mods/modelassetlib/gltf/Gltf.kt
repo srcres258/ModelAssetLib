@@ -1,12 +1,8 @@
 package top.srcres.mods.modelassetlib.gltf
 
-import net.minecraft.resources.ResourceLocation
-import top.srcres.mods.modelassetlib.ModelAssetLib
-import java.io.Closeable
-
 abstract class Gltf(
     gltfData: ByteArray
-) : Closeable {
+) : AutoCloseable {
     class NativeCallback(gltf: Gltf, val gltfData: ByteArray) : NativeCallbackGltf(gltf) {
         override fun getInitialGltfData() = gltfData
 
