@@ -67,7 +67,10 @@ impl LoadedGltf {
     }
 }
 
-pub fn get_native_callback<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) -> Result<JObject<'a>> {
+pub fn get_native_callback<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) -> Result<JObject<'a>> {
     let callback = env.get_field(this, "nativeCallback", "Ltop/srcres/mods/modelassetlib/gltf/Gltf$NativeCallback;");
     match callback {
         Ok(callback) => {
@@ -112,12 +115,18 @@ pub fn invoke_native_callback_no_args<'a>(
     invoke_native_callback(env, this, name, sig, &[])
 }
 
-pub fn get_initial_gltf_data<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) -> Result<JByteArray<'a>> {
+pub fn get_initial_gltf_data<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) -> Result<JByteArray<'a>> {
     let callback = get_native_callback(env, this)?;
     Ok(JByteArray::from(env.call_method(callback, "getInitialGltfData", "()[B", &[])?.l()?))
 }
 
-fn init_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
+fn init_gltf<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) {
     let gltf_data = get_initial_gltf_data(env, this);
     match gltf_data {
         Ok(gltf_data) => {
@@ -147,7 +156,10 @@ fn init_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
     }
 }
 
-pub fn load_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
+pub fn load_gltf<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) {
     let gltf_obj: gltf::Gltf;
     unsafe {
         gltf_obj = env.take_rust_field(this, "rust_gltfObj").unwrap();
@@ -221,7 +233,10 @@ pub fn load_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
     }
 }
 
-pub fn announce_gltf_image_uris<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
+pub fn announce_gltf_image_uris<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) {
     let gltf_obj: gltf::Gltf;
     unsafe {
         gltf_obj = env.take_rust_field(this, "rust_gltfObj").unwrap();
@@ -243,13 +258,19 @@ pub fn announce_gltf_image_uris<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
     }
 }
 
-pub fn handle_native_init<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
+pub fn handle_native_init<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) {
     init_gltf(env, this);
     load_gltf(env, this);
     announce_gltf_image_uris(env, this);
 }
 
-pub fn handle_native_destroy<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
+pub fn handle_native_destroy<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) {
     unsafe {
         let gltf_obj: gltf::Gltf = env.take_rust_field(&this, "rust_gltfObj").unwrap();
         drop(gltf_obj);
