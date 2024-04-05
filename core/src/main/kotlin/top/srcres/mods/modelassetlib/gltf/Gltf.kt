@@ -12,7 +12,7 @@ abstract class Gltf(
 
         override fun loadBufferFromURI(uriStr: String): ByteArray = gltf.loadBufferFromURI(uriStr)
 
-        override fun loadImageFromURI(uriStr: String): ByteArray = gltf.loadImageFromURI(uriStr)
+        override fun loadImageFromURI(uriStr: String, mimeTypeStr: String): ByteArray = gltf.loadImageFromURI(uriStr, mimeTypeStr)
     }
 
     private val nativeCallback = NativeCallback(this, gltfData)
@@ -29,7 +29,7 @@ abstract class Gltf(
 
     abstract fun loadBufferFromURI(uriStr: String): ByteArray
 
-    abstract fun loadImageFromURI(uriStr: String): ByteArray
+    abstract fun loadImageFromURI(uriStr: String, mimeTypeStr: String): ByteArray
 
     override fun close() {
         nativeDestroy()

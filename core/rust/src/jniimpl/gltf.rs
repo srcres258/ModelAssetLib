@@ -5,7 +5,7 @@ extern crate anyhow;
 use jni::JNIEnv;
 use jni::objects::{JByteArray, JObject, JValue, JValueOwned};
 use anyhow::Result;
-use gltf::buffer;
+use gltf::{buffer, image};
 use jni::sys::jbyte;
 use crate::util;
 
@@ -14,13 +14,28 @@ pub struct LoadedGltfBuffer {
     data: Vec<u8>
 }
 
+pub struct LoadedGltfImage {
+    uri: String,
+    data: Vec<u8>
+}
+
 pub struct LoadedGltf {
-    buffers: Vec<LoadedGltfBuffer>
+    buffers: Vec<LoadedGltfBuffer>,
+    images: Vec<LoadedGltfImage>
 }
 
 impl LoadedGltfBuffer {
-    fn new(uri: String, data: Vec<u8>) -> LoadedGltfBuffer {
-        LoadedGltfBuffer {
+    fn new(uri: String, data: Vec<u8>) -> Self {
+        Self {
+            uri,
+            data
+        }
+    }
+}
+
+impl LoadedGltfImage {
+    fn new(uri: String, data: Vec<u8>) -> Self {
+        Self {
             uri,
             data
         }
@@ -30,7 +45,8 @@ impl LoadedGltfBuffer {
 impl LoadedGltf {
     pub fn new() -> Self {
         Self {
-            buffers: Vec::new()
+            buffers: Vec::new(),
+            images: Vec::new()
         }
     }
 
@@ -40,6 +56,14 @@ impl LoadedGltf {
 
     pub fn get_buffers_mut(&mut self) -> &mut Vec<LoadedGltfBuffer> {
         &mut self.buffers
+    }
+
+    pub fn get_images(&self) -> &Vec<LoadedGltfImage> {
+        &self.images
+    }
+
+    pub fn get_images_mut(&mut self) -> &mut Vec<LoadedGltfImage> {
+        &mut self.images
     }
 }
 
@@ -147,6 +171,34 @@ pub fn load_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
                     env.get_byte_array_region(data_arr, 0, data.as_mut_slice()).unwrap();
                     let buf = LoadedGltfBuffer::new(String::from(uri), data.iter().map(|x| *x as u8).collect());
                     loaded_gltf.get_buffers_mut().push(buf);
+                }
+                Err(err) => {
+                    util::jni::clear_exception_if_occurred(env);
+                    util::jni::throw_runtime_exception(env, &format!("Failed to load glTF buffer: {}", err)).unwrap();
+                    return;
+                }
+            }
+        }
+    });
+    gltf_obj.images().for_each(|it| {
+        if let image::Source::Uri { uri, mime_type } = it.source() {
+            let mime_type = mime_type.unwrap_or("");
+            let uri_jstr = env.new_string(uri).unwrap();
+            let mime_type_jstr = env.new_string(mime_type).unwrap();
+            let data_arr = invoke_native_callback(
+                env, this, "loadImageFromURI", "(Ljava/lang/String;Ljava/lang/String;)[B",
+                &[JValue::Object(&uri_jstr), JValue::Object(&mime_type_jstr)]);
+            match data_arr {
+                Ok(data_arr) => {
+                    let data_arr = JByteArray::from(data_arr.l().unwrap());
+                    let data_arr_len = env.get_array_length(&data_arr).unwrap();
+                    let mut data = Vec::with_capacity(data_arr_len as usize);
+                    for _ in 0..data_arr_len {
+                        data.push(0);
+                    }
+                    env.get_byte_array_region(data_arr, 0, data.as_mut_slice()).unwrap();
+                    let img = LoadedGltfImage::new(String::from(uri), data.iter().map(|x| *x as u8).collect());
+                    loaded_gltf.get_images_mut().push(img);
                 }
                 Err(err) => {
                     util::jni::clear_exception_if_occurred(env);

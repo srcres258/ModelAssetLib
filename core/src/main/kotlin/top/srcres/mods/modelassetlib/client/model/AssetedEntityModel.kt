@@ -39,7 +39,7 @@ class AssetedEntityModel<T : Entity?>(
             = ModelAssetLib.mcInstance.resourceManager.getResource(ResourceLocation(uriStr))
                 .get().open().readAllBytes()
 
-    private fun loadImageFromURI(uriStr: String): ByteArray
+    private fun loadImageFromURI(uriStr: String, mimeTypeStr: String): ByteArray
             = ModelAssetLib.mcInstance.resourceManager.getResource(ResourceLocation(uriStr))
                 .get().open().readAllBytes()
 
