@@ -1,14 +1,12 @@
 package top.srcres.mods.modelassetlib
 
 import net.minecraft.client.Minecraft
-import net.minecraft.world.entity.Entity
 import net.neoforged.fml.common.Mod
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
-import top.srcres.mods.modelassetlib.client.model.AssetedEntityModel
-import java.io.File
+import java.util.ArrayList
 
 @Mod(ModelAssetLib.MODID)
 object ModelAssetLib {
@@ -17,9 +15,14 @@ object ModelAssetLib {
     val logger: Logger = LoggerFactory.getLogger(MODID)
     val mcInstance: Minecraft
         get() = Minecraft.getInstance()
+    private val nativeLoadedListenerList = ArrayList<() -> Unit>();
 
     init {
         MOD_BUS.addListener(::onLoadComplete)
+    }
+
+    fun addNativeLoadedListener(listener: () -> Unit) {
+        nativeLoadedListenerList.add(listener)
     }
 
     private fun onLoadComplete(event: FMLLoadCompleteEvent) {
@@ -27,9 +30,8 @@ object ModelAssetLib {
         NativeLibrary.loadNative(mc.resourceManager)
         NativeLibrary.initNative()
 
-        val data = File("/home/srcres/App/blender-4.0.2-linux-x64/models/Horus/export/Horus.gltf").inputStream().readAllBytes()
-        val model = AssetedEntityModel<Entity>(data)
-        logger.info("model.getGltfMeshCount(): ${model.getGltfMeshCount()}")
-        model.close()
+        for (listener in nativeLoadedListenerList) {
+            listener()
+        }
     }
 }
