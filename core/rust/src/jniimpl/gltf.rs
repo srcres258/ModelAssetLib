@@ -90,17 +90,7 @@ pub fn invoke_native_callback_no_args<'a>(
 
 pub fn get_initial_gltf_data<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) -> Result<JByteArray<'a>> {
     let callback = get_native_callback(env, this)?;
-    let gltf_data = env.call_method(callback, "getInitialGltfData", "()[B", &[]);
-    match gltf_data {
-        Ok(gltf_data) => {
-            Ok(JByteArray::from(gltf_data.l().unwrap()))
-        }
-        Err(err) => {
-            util::jni::clear_exception_if_occurred(env);
-            util::jni::throw_runtime_exception(env, &format!("Failed to invoke getInitialGltfData: {}", err)).unwrap();
-            Err(err.into())
-        }
-    }
+    Ok(JByteArray::from(env.call_method(callback, "getInitialGltfData", "()[B", &[])?.l()?))
 }
 
 fn init_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
