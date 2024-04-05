@@ -15,7 +15,7 @@ import java.io.InputStream
 class AssetedEntityModel<T : Entity?>(
     gltfData: ByteArray
 ) : EntityModel<T>(), Closeable {
-    private val gltf: DefaultGltf;
+    private val gltf: DefaultGltf
 
     constructor(input: InputStream)
             : this(input.use { it.readAllBytes() })
