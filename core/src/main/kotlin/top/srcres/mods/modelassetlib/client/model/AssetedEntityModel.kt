@@ -33,7 +33,8 @@ class AssetedEntityModel<T : Entity?>(
 
         for (uri in gltf.imageURIList) {
             val data = gltf.getImageDataByURI(uri)
-            ModelAssetLib.mcInstance.textureManager.register(ResourceLocation(uri), AssetedTexture(data))
+            val location = ResourceLocation(uri)
+            ModelAssetLib.mcInstance.textureManager.register(location, AssetedTexture(location, data))
         }
     }
 
