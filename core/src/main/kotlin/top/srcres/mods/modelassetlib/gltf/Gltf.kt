@@ -1,6 +1,5 @@
 package top.srcres.mods.modelassetlib.gltf
 
-import top.srcres.mods.modelassetlib.ModelAssetLib
 import java.io.Closeable
 
 class Gltf(
@@ -10,16 +9,19 @@ class Gltf(
         override fun getInitialGltfData() = gltfData
 
         override fun loadBufferFromURI(uriStr: String): ByteArray {
-            TODO("Not yet implemented")
+            println("loadBufferFromURI called")
+            TODO()
         }
 
         override fun loadImageFromURI(uriStr: String): ByteArray {
-            TODO("Not yet implemented")
+            println("loadImageFromURI called")
+            TODO()
         }
     }
 
     private val nativeCallback = NativeCallback(this, gltfData)
     private var rust_gltfObj: Long = 0L
+    private var rust_loadedGltfObj: Long = 0L
 
     init {
         nativeInit()

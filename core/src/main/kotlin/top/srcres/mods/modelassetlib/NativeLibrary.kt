@@ -7,6 +7,15 @@ import java.nio.file.Path
 import java.util.Random
 
 object NativeLibrary {
+    val nativeDefinedClasses = arrayOf("top.srcres.mods.modelassetlib.gltf.Gltf")
+
+    private fun preloadNativeDefinedClasses() {
+        for (className in nativeDefinedClasses) {
+            ModelAssetLib.logger.info("Preloading native-defined class: $className")
+            Class.forName(className)
+        }
+    }
+
     private fun getNativeName(osName: String) = when (osName) {
         "Linux" -> "libmodelassetlib_native.so"
         "Windows NT" -> "modelassetlib_native.dll"
@@ -26,6 +35,8 @@ object NativeLibrary {
     }
 
     fun loadNative(resManager: ResourceManager) {
+        preloadNativeDefinedClasses()
+
         val osName = System.getProperty("os.name")
         val nativeName = getNativeName(osName)
         val libRes = resManager.getResource(ResourceLocation(ModelAssetLib.MODID, "lib/$nativeName")).get()
