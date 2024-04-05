@@ -1,35 +1,35 @@
 package top.srcres.mods.modelassetlib.gltf
 
+import net.minecraft.resources.ResourceLocation
+import top.srcres.mods.modelassetlib.ModelAssetLib
 import java.io.Closeable
 
-class Gltf(
+abstract class Gltf(
     gltfData: ByteArray
 ) : Closeable {
     class NativeCallback(gltf: Gltf, val gltfData: ByteArray) : NativeCallbackGltf(gltf) {
         override fun getInitialGltfData() = gltfData
 
-        override fun loadBufferFromURI(uriStr: String): ByteArray {
-            println("loadBufferFromURI called")
-            TODO()
-        }
+        override fun loadBufferFromURI(uriStr: String): ByteArray = gltf.loadBufferFromURI(uriStr)
 
-        override fun loadImageFromURI(uriStr: String): ByteArray {
-            println("loadImageFromURI called")
-            TODO()
-        }
+        override fun loadImageFromURI(uriStr: String): ByteArray = gltf.loadImageFromURI(uriStr)
     }
 
     private val nativeCallback = NativeCallback(this, gltfData)
     private var rust_gltfObj: Long = 0L
     private var rust_loadedGltfObj: Long = 0L
 
-    init {
-        nativeInit()
-    }
-
     private external fun nativeInit()
 
     private external fun nativeDestroy()
+
+    open fun init() {
+        nativeInit()
+    }
+
+    abstract fun loadBufferFromURI(uriStr: String): ByteArray
+
+    abstract fun loadImageFromURI(uriStr: String): ByteArray
 
     override fun close() {
         nativeDestroy()
