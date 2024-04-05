@@ -7,13 +7,14 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.Resource
 import net.minecraft.world.entity.Entity
 import top.srcres.mods.modelassetlib.ModelAssetLib
+import top.srcres.mods.modelassetlib.gltf.Gltf
 import java.io.Closeable
 import java.io.InputStream
 
 class AssetedEntityModel<T : Entity?>(
     gltfData: ByteArray
 ) : EntityModel<T>(), Closeable {
-    private var rust_gltfObj: Long = 0L
+    private val gltf = Gltf(gltfData)
 
     constructor(input: InputStream)
             : this(input.use { it.readAllBytes() })
@@ -24,18 +25,8 @@ class AssetedEntityModel<T : Entity?>(
     constructor(resLoc: ResourceLocation)
             : this(ModelAssetLib.mcInstance.resourceManager.getResource(resLoc).get())
 
-    init {
-        nativeInit(gltfData)
-    }
-
-    private external fun nativeInit(gltfData: ByteArray)
-
-    external fun getGltfMeshCount(): Int
-
-    private external fun nativeDestroy()
-
     override fun close() {
-        nativeDestroy()
+        gltf.close()
     }
 
     override fun renderToBuffer(

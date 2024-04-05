@@ -23,7 +23,6 @@ object MALExample {
         ModelAssetLib.addNativeLoadedListener {
             val data = File("/home/srcres/App/blender-4.0.2-linux-x64/models/Horus/export/Horus.gltf").inputStream().readAllBytes()
             val model = AssetedEntityModel<Entity>(data)
-            logger.info("model.getGltfMeshCount(): ${model.getGltfMeshCount()}")
             model.close()
         }
     }
