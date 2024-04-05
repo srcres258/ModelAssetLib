@@ -16,7 +16,7 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_NativeLibrary_initNati
     _: JObject<'local>
 ) -> jboolean {
     println!("Native library initialized.");
-    util::bool_to_jboolean(true)
+    util::jni::bool_to_jboolean(true)
 }
 
 // ----- top.srcres.mods.modelassetlib.client.model.AssetedEntityModel
@@ -39,12 +39,12 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_client_model_AssetedEn
         Ok(gltf_obj) => {
             unsafe {
                 env.set_rust_field(&this, "rust_gltfObj", gltf_obj).unwrap_or_else(|err| {
-                    util::throw_runtime_exception(&mut env, &format!("Failed to set rust_gltfObj: {}", err)).unwrap();
+                    util::jni::throw_runtime_exception(&mut env, &format!("Failed to set rust_gltfObj: {}", err)).unwrap();
                 });
             }
         }
         Err(err) => {
-            util::throw_runtime_exception(&mut env, &format!("Failed to create the glTF object: {}", err)).unwrap();
+            util::jni::throw_runtime_exception(&mut env, &format!("Failed to create the glTF object: {}", err)).unwrap();
         }
     }
 }
