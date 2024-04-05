@@ -4,4 +4,5 @@ abstract class NativeCallbackGltf(val gltf: Gltf) {
     abstract fun getInitialGltfData(): ByteArray
     abstract fun loadBufferFromURI(uriStr: String): ByteArray
     abstract fun loadImageFromURI(uriStr: String, mimeTypeStr: String): ByteArray
+    abstract fun receiveImageURI(uriStr: String)
 }

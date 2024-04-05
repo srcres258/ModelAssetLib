@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.Resource
 import net.minecraft.world.entity.Entity
 import top.srcres.mods.modelassetlib.ModelAssetLib
+import top.srcres.mods.modelassetlib.client.renderer.texture.AssetedTexture
 import top.srcres.mods.modelassetlib.gltf.DefaultGltf
 import top.srcres.mods.modelassetlib.gltf.Gltf
 import java.io.Closeable
@@ -29,6 +30,11 @@ class AssetedEntityModel<T : Entity?>(
     init {
         gltf = DefaultGltf(gltfData, ::loadBufferFromURI, ::loadImageFromURI)
         gltf.init()
+
+        for (uri in gltf.imageURIList) {
+            val data = gltf.getImageDataByURI(uri)
+            ModelAssetLib.mcInstance.textureManager.register(ResourceLocation(uri), AssetedTexture(data))
+        }
     }
 
     override fun close() {

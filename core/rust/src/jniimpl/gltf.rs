@@ -3,10 +3,10 @@ extern crate gltf;
 extern crate anyhow;
 
 use jni::JNIEnv;
-use jni::objects::{JByteArray, JObject, JValue, JValueOwned};
+use jni::objects::{JByteArray, JObject, JString, JValue, JValueOwned};
 use anyhow::Result;
 use gltf::{buffer, image};
-use jni::sys::jbyte;
+use jni::sys::{jbyte, jbyteArray, jsize};
 use crate::util;
 
 pub struct LoadedGltfBuffer {
@@ -221,9 +221,32 @@ pub fn load_gltf<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
     }
 }
 
+pub fn announce_gltf_image_uris<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
+    let gltf_obj: gltf::Gltf;
+    unsafe {
+        gltf_obj = env.take_rust_field(this, "rust_gltfObj").unwrap();
+    }
+
+    gltf_obj.images().for_each(|it| {
+        if let image::Source::Uri { uri, mime_type: _ } = it.source() {
+            let uri_jstr = env.new_string(uri).unwrap();
+            invoke_native_callback(env, this, "receiveImageURI", "(Ljava/lang/String;)V",
+                                   &[JValue::Object(&uri_jstr)]).unwrap();
+        }
+    });
+
+    unsafe {
+        env.set_rust_field(this, "rust_gltfObj", gltf_obj).unwrap_or_else(|err| {
+            util::jni::clear_exception_if_occurred(env);
+            util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_gltfObj: {}", err)).unwrap()
+        });
+    }
+}
+
 pub fn handle_native_init<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
     init_gltf(env, this);
     load_gltf(env, this);
+    announce_gltf_image_uris(env, this);
 }
 
 pub fn handle_native_destroy<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
@@ -231,4 +254,42 @@ pub fn handle_native_destroy<'a>(env: &mut JNIEnv<'a>, this: &JObject<'a>) {
         let gltf_obj: gltf::Gltf = env.take_rust_field(&this, "rust_gltfObj").unwrap();
         drop(gltf_obj);
     }
+}
+
+pub fn handle_get_image_data_by_uri<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>,
+    uri_jstr: &JString
+) -> jbyteArray {
+    let loaded_gltf_obj: LoadedGltf;
+    unsafe {
+        loaded_gltf_obj = env.take_rust_field(this, "rust_loadedGltfObj").unwrap();
+    }
+
+    let uri = String::from(env.get_string(uri_jstr).unwrap());
+    let mut target_img: Option<&LoadedGltfImage> = None;
+    for image in loaded_gltf_obj.get_images() {
+        if image.uri == uri {
+            target_img = Some(image);
+            break;
+        }
+    }
+
+    let mut result: Vec<u8> = Vec::new();
+    if let Some(image) = target_img {
+        result = Vec::with_capacity(image.data.len());
+        image.data.iter().for_each(|x| result.push(*x));
+    }
+
+    unsafe {
+        env.set_rust_field(this, "rust_loadedGltfObj", loaded_gltf_obj).unwrap_or_else(|err| {
+            util::jni::clear_exception_if_occurred(env);
+            util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_loadedGltfObj: {}", err)).unwrap()
+        });
+    }
+
+    let jresult = env.new_byte_array(result.len() as jsize).unwrap();
+    let result_jbyte: Vec<jbyte> = result.iter().map(|x| *x as jbyte).collect();
+    env.set_byte_array_region(&jresult, 0, result_jbyte.as_slice()).unwrap();
+    jresult.as_raw()
 }
