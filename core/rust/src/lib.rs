@@ -47,6 +47,17 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_gltf_Gltf_getImageData
     jniimpl::gltf::handle_get_image_data_by_uri(&mut env, &this, &uri)
 }
 
+// Class: top.srcres.mods.modelassetlib.image.ImageKt
+// File: top/srcres/mods/modelassetlib/image/Image.kt
+
+#[no_mangle]
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeGetErrorMessage<'local>(
+    mut env: JNIEnv<'local>,
+    class: JClass<'local>
+) -> jstring {
+    jniimpl::image::handle_get_error_message(&mut env, &class)
+}
+
 // Class: top.srcres.mods.modelassetlib.image.Image
 // File: top/srcres/mods/modelassetlib/image/Image.kt
 
@@ -95,13 +106,26 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_nativeDest
     jniimpl::image::handle_native_destroy(&mut env, &this).unwrap()
 }
 
-// Class: top.srcres.mods.modelassetlib.image.ImageKt
-// File: top/srcres/mods/modelassetlib/image/Image.kt
+#[no_mangle]
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_getWidth0<'local>(
+    mut env: JNIEnv<'local>,
+    this: JObject<'local>
+) -> jint {
+    jniimpl::image::handle_get_width(&mut env, &this).unwrap_or_else(|err| {
+        jniimpl::image::ERROR_MESSAGE.lock().unwrap().set(&format!(
+            "jniimpl::image::handle_get_width failed: {}", err));
+        -1
+    })
+}
 
 #[no_mangle]
-pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeGetErrorMessage<'local>(
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_getHeight0<'local>(
     mut env: JNIEnv<'local>,
-    class: JClass<'local>
-) -> jstring {
-    jniimpl::image::handle_get_error_message(&mut env, &class)
+    this: JObject<'local>
+) -> jint {
+    jniimpl::image::handle_get_height(&mut env, &this).unwrap_or_else(|err| {
+        jniimpl::image::ERROR_MESSAGE.lock().unwrap().set(&format!(
+            "jniimpl::image::handle_get_height failed: {}", err));
+        -1
+    })
 }

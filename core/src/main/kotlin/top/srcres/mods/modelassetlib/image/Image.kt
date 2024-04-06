@@ -4,25 +4,48 @@ import java.util.Optional
 
 external fun nativeGetErrorMessage(): String
 
-class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
-    private var rust_imageObj: Long = 0L
+fun newExceptionFromNativeErrorMessage(prefixMessage: String): RuntimeException {
+    val msg = nativeGetErrorMessage()
+    return RuntimeException("$prefixMessage: $msg")
+}
 
+class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
     constructor(rawData: ByteArray) : this(rawData, Optional.empty())
 
     init {
         if (format.isEmpty) {
             if (!nativeInit(rawData)) {
-                val msg = nativeGetErrorMessage()
-                throw RuntimeException("Failed to initialise native image: $msg")
+                throw newExceptionFromNativeErrorMessage("Failed to initialise native image")
             }
         } else {
             val fmt = format.get()
             if (!nativeInitWithFormat(rawData, fmt.id)) {
-                val msg = nativeGetErrorMessage()
-                throw RuntimeException("Failed to initialise native image with format $fmt: $msg")
+                throw newExceptionFromNativeErrorMessage("Failed to initialise native image with format $fmt");
             }
         }
     }
+
+    private var rust_imageObj: Long = 0L
+
+    val width: Int
+        get() {
+            val n = getWidth0()
+            if (n < 0) {
+                throw newExceptionFromNativeErrorMessage("Failed to get image width")
+            } else {
+                return n
+            }
+        }
+
+    val height: Int
+        get() {
+            val n = getHeight0()
+            if (n < 0) {
+                throw newExceptionFromNativeErrorMessage("Failed to get image height")
+            } else {
+                return n
+            }
+        }
 
     private external fun nativeInit(rawData: ByteArray): Boolean
 
@@ -30,9 +53,9 @@ class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
 
     private external fun nativeDestroy()
 
-    private external fun getWidth0()
+    private external fun getWidth0(): Int
 
-    private external fun getHeight0()
+    private external fun getHeight0(): Int
 
     override fun close() {
         nativeDestroy()

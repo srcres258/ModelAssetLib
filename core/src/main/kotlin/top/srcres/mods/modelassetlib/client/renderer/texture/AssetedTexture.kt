@@ -3,6 +3,7 @@ package top.srcres.mods.modelassetlib.client.renderer.texture
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.ResourceManager
+import top.srcres.mods.modelassetlib.ModelAssetLib
 import top.srcres.mods.modelassetlib.image.Image
 import top.srcres.mods.modelassetlib.image.ImageFormat
 import java.util.Optional
@@ -17,5 +18,7 @@ class AssetedTexture(
     val pixels = Image(rawData, format)
 
     override fun load(pResourceManager: ResourceManager) {
+        ModelAssetLib.logger.info("Texture $location: pixels width is ${pixels.width}")
+        ModelAssetLib.logger.info("Texture $location: pixels height is ${pixels.height}")
     }
 }

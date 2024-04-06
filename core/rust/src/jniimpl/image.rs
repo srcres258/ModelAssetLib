@@ -80,3 +80,39 @@ pub fn handle_get_error_message<'a>(
     let msg_jstr = env.new_string(msg).unwrap();
     msg_jstr.as_raw()
 }
+
+pub fn handle_get_width<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) -> Result<jint> {
+    let image: RgbaImage;
+    unsafe {
+        image = env.take_rust_field(this, "rust_imageObj")?;
+    }
+
+    let result = image.width();
+
+    unsafe {
+        env.set_rust_field(this, "rust_imageObj", image)?;
+    }
+
+    Ok(result as jint)
+}
+
+pub fn handle_get_height<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) -> Result<jint> {
+    let image: RgbaImage;
+    unsafe {
+        image = env.take_rust_field(this, "rust_imageObj")?;
+    }
+
+    let result = image.height();
+
+    unsafe {
+        env.set_rust_field(this, "rust_imageObj", image)?;
+    }
+
+    Ok(result as jint)
+}
