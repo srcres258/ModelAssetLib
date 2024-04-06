@@ -131,10 +131,7 @@ fn init_gltf<'a>(
     match gltf_data {
         Ok(gltf_data) => {
             let gltf_data_len = env.get_array_length(&gltf_data).unwrap();
-            let mut gltf_data_vec: Vec<jbyte> = Vec::with_capacity(gltf_data_len as usize);
-            for _ in 0..gltf_data_len {
-                gltf_data_vec.push(0);
-            }
+            let mut gltf_data_vec: Vec<jbyte> = util::new_buffer_vec(gltf_data_len as usize, 0);
             env.get_byte_array_region(&gltf_data, 0, gltf_data_vec.as_mut_slice()).unwrap();
             let gltf_data_u8: Vec<_> = gltf_data_vec.iter().map(|it| *it as u8).collect();
             let gltf_obj = gltf::Gltf::from_slice(gltf_data_u8.as_slice());
@@ -176,10 +173,7 @@ pub fn load_gltf<'a>(
                 Ok(data_arr) => {
                     let data_arr = JByteArray::from(data_arr.l().unwrap());
                     let data_arr_len = env.get_array_length(&data_arr).unwrap();
-                    let mut data = Vec::with_capacity(data_arr_len as usize);
-                    for _ in 0..data_arr_len {
-                        data.push(0);
-                    }
+                    let mut data = util::new_buffer_vec(data_arr_len as usize, 0);
                     env.get_byte_array_region(data_arr, 0, data.as_mut_slice()).unwrap();
                     let buf = LoadedGltfBuffer::new(String::from(uri), data.iter().map(|x| *x as u8).collect());
                     loaded_gltf.get_buffers_mut().push(buf);
@@ -204,10 +198,7 @@ pub fn load_gltf<'a>(
                 Ok(data_arr) => {
                     let data_arr = JByteArray::from(data_arr.l().unwrap());
                     let data_arr_len = env.get_array_length(&data_arr).unwrap();
-                    let mut data = Vec::with_capacity(data_arr_len as usize);
-                    for _ in 0..data_arr_len {
-                        data.push(0);
-                    }
+                    let mut data = util::new_buffer_vec(data_arr_len as usize, 0);
                     env.get_byte_array_region(data_arr, 0, data.as_mut_slice()).unwrap();
                     let img = LoadedGltfImage::new(String::from(uri), data.iter().map(|x| *x as u8).collect());
                     loaded_gltf.get_images_mut().push(img);
