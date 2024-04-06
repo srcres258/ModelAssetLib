@@ -3,7 +3,6 @@ package top.srcres.mods.modelassetlib
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.ResourceManager
 import java.io.File
-import java.nio.file.Path
 import java.util.Random
 
 object NativeLibrary {
