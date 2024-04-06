@@ -16,6 +16,12 @@ lazy_static::lazy_static! {
     pub static ref ERROR_MESSAGE: Mutex<ErrorMessage> = Mutex::new(ErrorMessage::new());
 }
 
+pub fn record_error(msg: &str) {
+    let err_msg = ERROR_MESSAGE.lock().unwrap();
+    err_msg.mark_occurred();
+    err_msg.set(msg);
+}
+
 pub fn handle_native_init<'a>(
     env: &mut JNIEnv<'a>,
     this: &JObject<'a>,
@@ -72,6 +78,13 @@ pub fn handle_native_destroy<'a>(
     Ok(())
 }
 
+pub fn handle_is_error_occurred<'a>(
+    _: &mut JNIEnv<'a>,
+    _: &JClass<'a>
+) -> bool {
+    ERROR_MESSAGE.lock().unwrap().is_occurred()
+}
+
 pub fn handle_get_error_message<'a>(
     env: &mut JNIEnv<'a>,
     _: &JClass<'a>
@@ -79,6 +92,15 @@ pub fn handle_get_error_message<'a>(
     let msg = ERROR_MESSAGE.lock().unwrap().get();
     let msg_jstr = env.new_string(msg).unwrap();
     msg_jstr.as_raw()
+}
+
+pub fn handle_clear_error<'a>(
+    _: &mut JNIEnv<'a>,
+    _: &JClass<'a>
+) {
+    let msg = ERROR_MESSAGE.lock().unwrap();
+    msg.set("");
+    msg.clear_mark();
 }
 
 pub fn handle_get_width<'a>(

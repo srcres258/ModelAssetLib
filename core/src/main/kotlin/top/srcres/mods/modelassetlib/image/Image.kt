@@ -2,7 +2,9 @@ package top.srcres.mods.modelassetlib.image
 
 import java.util.Optional
 
+external fun nativeIsErrorOccurred(): Boolean
 external fun nativeGetErrorMessage(): String
+external fun nativeClearError()
 
 fun newExceptionFromNativeErrorMessage(prefixMessage: String): RuntimeException {
     val msg = nativeGetErrorMessage()
@@ -56,6 +58,8 @@ class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
     private external fun getWidth0(): Int
 
     private external fun getHeight0(): Int
+
+    private external fun getRgbaData0(): ByteArray
 
     override fun close() {
         nativeDestroy()
