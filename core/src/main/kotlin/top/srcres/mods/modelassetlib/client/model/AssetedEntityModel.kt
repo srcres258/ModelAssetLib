@@ -9,9 +9,14 @@ import net.minecraft.world.entity.Entity
 import top.srcres.mods.modelassetlib.ModelAssetLib
 import top.srcres.mods.modelassetlib.client.renderer.texture.AssetedTexture
 import top.srcres.mods.modelassetlib.gltf.DefaultGltf
-import top.srcres.mods.modelassetlib.gltf.Gltf
+import top.srcres.mods.modelassetlib.image.ImageFormat
 import java.io.Closeable
 import java.io.InputStream
+
+private fun getExtensionFromURI(uri: String): String {
+    val parts = uri.split('.')
+    return parts[parts.size - 1]
+}
 
 class AssetedEntityModel<T : Entity?>(
     gltfData: ByteArray
@@ -34,7 +39,8 @@ class AssetedEntityModel<T : Entity?>(
         for (uri in gltf.imageURIList) {
             val data = gltf.getImageDataByURI(uri)
             val location = ResourceLocation(uri)
-            ModelAssetLib.mcInstance.textureManager.register(location, AssetedTexture(location, data))
+            val format = ImageFormat.fromExtension(getExtensionFromURI(uri))
+            ModelAssetLib.mcInstance.textureManager.register(location, AssetedTexture(location, data, format))
         }
     }
 
