@@ -12,7 +12,6 @@ class AssetedTexture(
     rawData: ByteArray,
     format: Optional<ImageFormat>
 ) : AbstractTexture() {
-    // TODO:
     // Using the NativeImage#read method will straightly lead to java.lang.OutOfMemoryError: Out of stack space.
     // Hence, we are forced to implement image source decoding algorithm on our own.
     val pixels = Image(rawData, format)
