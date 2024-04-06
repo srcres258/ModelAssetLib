@@ -7,7 +7,8 @@ use jni::sys::{jboolean, jbyteArray, jint, jstring};
 pub mod jniimpl;
 pub mod util;
 
-// ----- top.srcres.mods.modelassetlib.ModelAssetLib
+// Class: top.srcres.mods.modelassetlib.NativeLibrary
+// File: top/srcres/mods/modelassetlib/NativeLibrary.kt
 
 #[no_mangle]
 pub extern "system" fn Java_top_srcres_mods_modelassetlib_NativeLibrary_initNative0<'local>(
@@ -18,7 +19,8 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_NativeLibrary_initNati
     util::jni::bool_to_jboolean(true)
 }
 
-// ----- top.srcres.mods.modelassetlib.gltf.Gltf
+// Class: top.srcres.mods.modelassetlib.gltf.Gltf
+// File: top/srcres/mods/modelassetlib/gltf/Gltf.kt
 
 #[no_mangle]
 pub extern "system" fn Java_top_srcres_mods_modelassetlib_gltf_Gltf_nativeInit<'local>(
@@ -45,7 +47,8 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_gltf_Gltf_getImageData
     jniimpl::gltf::handle_get_image_data_by_uri(&mut env, &this, &uri)
 }
 
-// ----- top.srcres.mods.modelassetlib.image.Image
+// Class: top.srcres.mods.modelassetlib.image.Image
+// File: top/srcres/mods/modelassetlib/image/Image.kt
 
 #[no_mangle]
 pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_nativeInit<'local>(
@@ -91,6 +94,9 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_nativeDest
 ) {
     jniimpl::image::handle_native_destroy(&mut env, &this).unwrap()
 }
+
+// Class: top.srcres.mods.modelassetlib.image.ImageKt
+// File: top/srcres/mods/modelassetlib/image/Image.kt
 
 #[no_mangle]
 pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeGetErrorMessage<'local>(
