@@ -7,11 +7,11 @@ use jni::sys::{jboolean, jbyteArray, jint, jstring};
 pub mod jniimpl;
 pub mod util;
 
-// Class: top.srcres.mods.modelassetlib.NativeLibrary
-// File: top/srcres/mods/modelassetlib/NativeLibrary.kt
+// Class: top.srcres.mods.modelassetlib.jni.NativeLibrary
+// File: top/srcres/mods/modelassetlib/jni/NativeLibrary.kt
 
 #[no_mangle]
-pub extern "system" fn Java_top_srcres_mods_modelassetlib_NativeLibrary_initNative0<'local>(
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_jni_NativeLibrary_initNative0<'local>(
     _: JNIEnv<'local>,
     _: JObject<'local>
 ) -> jboolean {

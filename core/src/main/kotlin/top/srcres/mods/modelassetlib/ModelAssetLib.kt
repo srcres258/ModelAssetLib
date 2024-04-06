@@ -6,6 +6,7 @@ import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import thedarkcolour.kotlinforforge.neoforge.forge.MOD_BUS
+import top.srcres.mods.modelassetlib.jni.NativeLibrary
 import java.util.ArrayList
 
 @Mod(ModelAssetLib.MODID)

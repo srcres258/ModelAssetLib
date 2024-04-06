@@ -1,7 +1,9 @@
-package top.srcres.mods.modelassetlib
+package top.srcres.mods.modelassetlib.jni
 
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.ResourceManager
+import top.srcres.mods.modelassetlib.ModelAssetLib
+import top.srcres.mods.modelassetlib.UnsupportedOSException
 import java.io.File
 import java.util.Random
 
