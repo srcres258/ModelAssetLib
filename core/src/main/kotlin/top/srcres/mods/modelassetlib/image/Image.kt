@@ -1,6 +1,5 @@
 package top.srcres.mods.modelassetlib.image
 
-import java.nio.ByteBuffer
 import java.util.Optional
 
 external fun nativeIsErrorOccurred(): Boolean
