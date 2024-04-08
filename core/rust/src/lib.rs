@@ -145,3 +145,15 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_getHeight0
         -1
     })
 }
+
+#[no_mangle]
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_Image_getRgbaData0<'local>(
+    mut env: JNIEnv<'local>,
+    this: JObject<'local>
+) -> jbyteArray {
+    jniimpl::image::handle_get_rgba_data(&mut env, &this).unwrap_or_else(|err| {
+        jniimpl::image::record_error(&format!(
+            "jniimpl::image::handle_get_rgba_data failed: {}", err));
+        util::jni::new_empty_byte_array(&mut env)
+    })
+}

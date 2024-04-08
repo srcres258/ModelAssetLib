@@ -8,7 +8,7 @@ use jni::JNIEnv;
 use jni::objects::{JByteArray, JClass, JObject};
 use anyhow::Result;
 use image::RgbaImage;
-use jni::sys::{jbyte, jint, jstring};
+use jni::sys::{jbyte, jbyteArray, jint, jsize, jstring};
 use crate::util;
 use crate::util::error_message::ErrorMessage;
 
@@ -137,4 +137,24 @@ pub fn handle_get_height<'a>(
     }
 
     Ok(result as jint)
+}
+
+pub fn handle_get_rgba_data<'a>(
+    env: &mut JNIEnv<'a>,
+    this: &JObject<'a>
+) -> Result<jbyteArray> {
+    let image: RgbaImage;
+    unsafe {
+        image = env.take_rust_field(this, "rust_imageObj")?;
+    }
+
+    let data: Vec<jbyte> = image.as_raw().iter().map(|x| *x as jbyte).collect();
+    let data_jarr = env.new_byte_array(data.len() as jsize)?;
+    env.set_byte_array_region(&data_jarr, 0, data.as_slice())?;
+
+    unsafe {
+        env.set_rust_field(this, "rust_imageObj", image)?;
+    }
+
+    Ok(data_jarr.as_raw())
 }

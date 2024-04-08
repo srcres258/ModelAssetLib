@@ -1,5 +1,6 @@
 package top.srcres.mods.modelassetlib.image
 
+import java.nio.ByteBuffer
 import java.util.Optional
 
 external fun nativeIsErrorOccurred(): Boolean
@@ -17,12 +18,19 @@ class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
     init {
         if (format.isEmpty) {
             if (!nativeInit(rawData)) {
-                throw newExceptionFromNativeErrorMessage("Failed to initialise native image")
+                throw newExceptionFromNativeErrorMessage("Failed to initialise native image").let {
+                    nativeClearError()
+                    it
+                }
             }
         } else {
             val fmt = format.get()
             if (!nativeInitWithFormat(rawData, fmt.id)) {
-                throw newExceptionFromNativeErrorMessage("Failed to initialise native image with format $fmt");
+                throw newExceptionFromNativeErrorMessage("Failed to initialise native image with format $fmt").let {
+                    nativeClearError()
+                    it
+                }
+                nativeClearError()
             }
         }
     }
@@ -47,6 +55,18 @@ class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
             } else {
                 return n
             }
+        }
+
+    val rgbaData: ByteArray
+        get() {
+            val result = getRgbaData0()
+            if (nativeIsErrorOccurred()) {
+                throw newExceptionFromNativeErrorMessage("Failed to get image height").let {
+                    nativeClearError()
+                    it
+                }
+            }
+            return result
         }
 
     private external fun nativeInit(rawData: ByteArray): Boolean
