@@ -1,10 +1,44 @@
 package top.srcres.mods.modelassetlib.image
 
 import java.util.Optional
+import java.util.concurrent.locks.ReentrantLock
 
-external fun nativeIsErrorOccurred(): Boolean
-external fun nativeGetErrorMessage(): String
-external fun nativeClearError()
+val nativeLock = ReentrantLock()
+
+external fun nativeIsErrorOccurred0(): Boolean
+external fun nativeGetErrorMessage0(): String
+external fun nativeClearError0()
+
+fun nativeIsErrorOccurred(): Boolean {
+    val result: Boolean
+    nativeLock.lock()
+    try {
+        result = nativeIsErrorOccurred0()
+    } finally {
+        nativeLock.unlock()
+    }
+    return result
+}
+
+fun nativeGetErrorMessage(): String {
+    val result: String
+    nativeLock.lock()
+    try {
+        result = nativeGetErrorMessage0()
+    } finally {
+        nativeLock.unlock()
+    }
+    return result
+}
+
+fun nativeClearError() {
+    nativeLock.lock()
+    try {
+        nativeClearError0()
+    } finally {
+        nativeLock.unlock()
+    }
+}
 
 fun newExceptionFromNativeErrorMessage(prefixMessage: String): RuntimeException {
     val msg = nativeGetErrorMessage()

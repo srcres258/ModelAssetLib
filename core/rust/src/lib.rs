@@ -51,7 +51,7 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_gltf_Gltf_getImageData
 // File: top/srcres/mods/modelassetlib/image/Image.kt
 
 #[no_mangle]
-pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeIsErrorOccurred<'local>(
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeIsErrorOccurred0<'local>(
     mut env: JNIEnv<'local>,
     class: JClass<'local>
 ) -> jboolean {
@@ -59,7 +59,7 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeIs
 }
 
 #[no_mangle]
-pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeGetErrorMessage<'local>(
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeGetErrorMessage0<'local>(
     mut env: JNIEnv<'local>,
     class: JClass<'local>
 ) -> jstring {
@@ -67,7 +67,7 @@ pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeGe
 }
 
 #[no_mangle]
-pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeClearError<'local>(
+pub extern "system" fn Java_top_srcres_mods_modelassetlib_image_ImageKt_nativeClearError0<'local>(
     mut env: JNIEnv<'local>,
     class: JClass<'local>
 ) {
