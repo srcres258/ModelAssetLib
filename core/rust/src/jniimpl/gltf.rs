@@ -279,6 +279,10 @@ impl LoadedGltfImage {
         }
     }
 
+    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf>> {
+        Arc::clone(&self.gltf)
+    }
+
     pub fn get_index(&self) -> usize {
         self.index
     }
