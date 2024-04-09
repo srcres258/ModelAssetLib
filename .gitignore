@@ -24,3 +24,6 @@ runs
 run-data
 
 repo
+
+# Custom ingored files
+/series
