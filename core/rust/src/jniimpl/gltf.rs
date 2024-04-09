@@ -9,8 +9,10 @@ use gltf::{Accessor, buffer, image};
 use jni::sys::{jbyte, jbyteArray, jsize};
 use crate::util;
 use std::sync::{Arc, Mutex};
+use gltf::accessor::Dimensions;
 use gltf::buffer::View;
 use gltf::json::Value;
+use nalgebra::{matrix, SMatrix, SVector};
 
 pub struct LoadedGltfBuffer {
     gltf: Arc<Mutex<LoadedGltf>>,
@@ -36,7 +38,8 @@ pub struct  LoadedGltfAccessor {
     comp_size: usize,
     comp_count: usize,
     max_values: Option<Vec<Value>>,
-    min_values: Option<Vec<Value>>
+    min_values: Option<Vec<Value>>,
+    dimensions: Dimensions
 }
 
 pub struct LoadedGltfImage {
@@ -86,6 +89,16 @@ impl LoadedGltfBuffer {
     pub fn get_data_ptr(&self) -> *const u8 {
         self.data.as_ptr()
     }
+}
+
+pub enum LoadedGltfAccessorDatum {
+    Scalar(i32),
+    Vec2(SVector<i32, 2>),
+    Vec3(SVector<i32, 3>),
+    Vec4(SVector<i32, 4>),
+    Mat2(SMatrix<i32, 2, 2>),
+    Mat3(SMatrix<i32, 3, 3>),
+    Mat4(SMatrix<i32, 4, 4>)
 }
 
 impl LoadedGltfBufferView {
@@ -174,7 +187,8 @@ impl LoadedGltfAccessor {
         comp_size: usize,
         comp_count: usize,
         max_values: Option<Vec<Value>>,
-        min_values: Option<Vec<Value>>
+        min_values: Option<Vec<Value>>,
+        dimensions: Dimensions
     ) -> Self {
         Self {
             gltf: Arc::clone(gltf),
@@ -183,7 +197,8 @@ impl LoadedGltfAccessor {
             comp_size,
             comp_count,
             max_values,
-            min_values
+            min_values,
+            dimensions
         }
     }
 
@@ -197,46 +212,46 @@ impl LoadedGltfAccessor {
                     if let Value::Array(min_val_arr) = min_val {
                         Some(Self::new(
                             gltf, accessor.index(), accessor.view().unwrap().index(),accessor.size(),
-                            accessor.count(), Some(max_val_arr), Some(min_val_arr)))
+                            accessor.count(), Some(max_val_arr), Some(min_val_arr), accessor.dimensions()))
                     } else {
                         Some(Self::new(
                             gltf, accessor.index(), accessor.view().unwrap().index(),
-                            accessor.size(), accessor.count(), Some(max_val_arr), None))
+                            accessor.size(), accessor.count(), Some(max_val_arr), None, accessor.dimensions()))
                     }
                 } else {
                     Some(Self::new(
                         gltf, accessor.index(), accessor.view().unwrap().index(),
-                        accessor.size(), accessor.count(), Some(max_val_arr), None))
+                        accessor.size(), accessor.count(), Some(max_val_arr), None, accessor.dimensions()))
                 }
             } else if let Some(min_val) = accessor.min() {
                 if let Value::Array(min_val_arr) = min_val {
                     Some(Self::new(
                         gltf, accessor.index(), accessor.view().unwrap().index(),
-                        accessor.size(), accessor.count(), None, Some(min_val_arr)))
+                        accessor.size(), accessor.count(), None, Some(min_val_arr), accessor.dimensions()))
                 } else {
                     Some(Self::new(
                         gltf, accessor.index(), accessor.view().unwrap().index(),
-                        accessor.size(), accessor.count(), None, None))
+                        accessor.size(), accessor.count(), None, None, accessor.dimensions()))
                 }
             } else {
                 Some(Self::new(
                     gltf, accessor.index(), accessor.view().unwrap().index(),
-                    accessor.size(), accessor.count(), None, None))
+                    accessor.size(), accessor.count(), None, None, accessor.dimensions()))
             }
         } else if let Some(min_val) = accessor.min() {
             if let Value::Array(min_val_arr) = min_val {
                 Some(Self::new(
                     gltf, accessor.index(), accessor.view().unwrap().index(),
-                    accessor.size(), accessor.count(), None, Some(min_val_arr)))
+                    accessor.size(), accessor.count(), None, Some(min_val_arr), accessor.dimensions()))
             } else {
                 Some(Self::new(
                     gltf, accessor.index(), accessor.view().unwrap().index(),
-                    accessor.size(), accessor.count(), None, None))
+                    accessor.size(), accessor.count(), None, None, accessor.dimensions()))
             }
         } else {
             Some(Self::new(
                 gltf, accessor.index(), accessor.view().unwrap().index(),
-                accessor.size(), accessor.count(), None, None))
+                accessor.size(), accessor.count(), None, None, accessor.dimensions()))
         }
     }
 
@@ -266,6 +281,28 @@ impl LoadedGltfAccessor {
 
     pub fn get_min_values(&self) -> Option<Vec<Value>> {
         self.min_values.clone()
+    }
+
+    pub fn get_dimensions(&self) -> Dimensions {
+        self.dimensions
+    }
+    
+    pub fn load_data(&self) -> Vec<LoadedGltfAccessorDatum> {
+        todo!()
+    }
+}
+
+impl LoadedGltfAccessorDatum {
+    pub fn get_dimension(&self) -> usize {
+        match *self {
+            Self::Scalar(_) => 1,
+            Self::Vec2(_) => 2,
+            Self::Vec3(_) => 3,
+            Self::Vec4(_) => 4,
+            Self::Mat2(_) => 2,
+            Self::Mat3(_) => 3,
+            Self::Mat4(_) => 4
+        }
     }
 }
 
