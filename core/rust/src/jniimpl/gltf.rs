@@ -8,37 +8,156 @@ use anyhow::Result;
 use gltf::{buffer, image};
 use jni::sys::{jbyte, jbyteArray, jsize};
 use crate::util;
+use std::sync::{Arc, Mutex};
+use gltf::buffer::View;
 
 pub struct LoadedGltfBuffer {
+    gltf: Arc<Mutex<LoadedGltf>>,
+    index: usize,
     uri: String,
     data: Vec<u8>
 }
 
+pub struct LoadedGltfBufferView {
+    gltf: Arc<Mutex<LoadedGltf>>,
+    index: usize,
+    buffer_index: usize,
+    data_offset: usize,
+    data_length: usize,
+    data_stride: Option<usize>,
+    target: Option<buffer::Target>
+}
+
 pub struct LoadedGltfImage {
+    gltf: Arc<Mutex<LoadedGltf>>,
+    index: usize,
     uri: String,
     data: Vec<u8>
 }
 
 pub struct LoadedGltf {
     buffers: Vec<LoadedGltfBuffer>,
+    buffer_views: Vec<LoadedGltfBufferView>,
     images: Vec<LoadedGltfImage>
 }
 
+pub struct LoadedGltfWrapper {
+    gltf: Arc<Mutex<LoadedGltf>>
+}
+
 impl LoadedGltfBuffer {
-    fn new(uri: String, data: Vec<u8>) -> Self {
+    fn new(gltf: &Arc<Mutex<LoadedGltf>>, index: usize, uri: String, data: Vec<u8>) -> Self {
         Self {
+            gltf: Arc::clone(gltf),
+            index,
             uri,
             data
         }
     }
+
+    fn get_index(&self) -> usize {
+        self.index
+    }
+
+    fn get_uri(&self) -> &String {
+        &self.uri
+    }
+
+    fn get_data(&self) -> &Vec<u8> {
+        &self.data
+    }
+
+    fn get_data_ptr(&self) -> *const u8 {
+        self.data.as_ptr()
+    }
+}
+
+impl LoadedGltfBufferView {
+    fn new(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        index: usize,
+        buffer_index: usize,
+        data_offset: usize,
+        data_length: usize,
+        data_stride: Option<usize>,
+        target: Option<buffer::Target>
+    ) -> Self {
+        Self {
+            gltf: Arc::clone(gltf),
+            index,
+            buffer_index,
+            data_offset,
+            data_length,
+            data_stride,
+            target
+        }
+    }
+
+    fn new_from_view(gltf: &Arc<Mutex<LoadedGltf>>, view: &View) -> Self {
+        Self::new(gltf, view.index(), view.buffer().index(), view.offset(),
+                  view.length(), view.stride(), view.target())
+    }
+
+    fn get_index(&self) -> usize {
+        self.index
+    }
+
+    fn get_data_offset(&self) -> usize {
+        self.data_offset
+    }
+
+    fn get_data_length(&self) -> usize {
+        self.data_length
+    }
+
+    fn get_data_stride(&self) -> Option<usize> {
+        self.data_stride
+    }
+
+    fn get_target(&self) -> Option<buffer::Target> {
+        self.target
+    }
+
+    fn load_data(&self) -> Vec<u8> {
+        self.load_data_strided(0)
+    }
+
+    fn load_data_strided(&self, stride_count: u32) -> Vec<u8> {
+        let gltf = self.gltf.lock().unwrap();
+        let buffer = gltf.get_buffers().get(self.buffer_index).unwrap();
+        let mut result = util::new_buffer_vec(self.data_length, 0u8);
+        let result_ptr = result.as_mut_ptr();
+        unsafe {
+            let data_ptr = buffer.get_data_ptr().add(self.data_offset)
+                .add((stride_count as usize) * self.data_stride.unwrap_or(0));
+            let mut result_ptrm = result_ptr;
+            let mut data_ptrm = data_ptr;
+            for _ in 0..self.data_length {
+                *result_ptrm = *data_ptrm;
+                result_ptrm = result_ptrm.add(1);
+                data_ptrm = data_ptrm.add(1);
+            }
+        }
+        result
+    }
 }
 
 impl LoadedGltfImage {
-    fn new(uri: String, data: Vec<u8>) -> Self {
+    fn new(gltf: &Arc<Mutex<LoadedGltf>>, index: usize, uri: String, data: Vec<u8>) -> Self {
         Self {
+            gltf: Arc::clone(gltf),
+            index,
             uri,
             data
         }
+    }
+
+    fn get_index(&self) -> usize {
+        self.index
+    }
+
+    fn get_uri(&self) -> &String {
+        &self.uri
     }
 }
 
@@ -46,6 +165,7 @@ impl LoadedGltf {
     pub fn new() -> Self {
         Self {
             buffers: Vec::new(),
+            buffer_views: Vec::new(),
             images: Vec::new()
         }
     }
@@ -58,12 +178,32 @@ impl LoadedGltf {
         &mut self.buffers
     }
 
+    pub fn get_buffer_views(&self) -> &Vec<LoadedGltfBufferView> {
+        &self.buffer_views
+    }
+
+    pub fn get_buffer_views_mut(&mut self) -> &mut Vec<LoadedGltfBufferView> {
+        &mut self.buffer_views
+    }
+
     pub fn get_images(&self) -> &Vec<LoadedGltfImage> {
         &self.images
     }
 
     pub fn get_images_mut(&mut self) -> &mut Vec<LoadedGltfImage> {
         &mut self.images
+    }
+}
+
+impl LoadedGltfWrapper {
+    fn new(gltf: LoadedGltf) -> Self {
+        Self {
+            gltf: Arc::new(Mutex::new(gltf))
+        }
+    }
+
+    fn get(&self) -> &Arc<Mutex<LoadedGltf>> {
+        &self.gltf
     }
 }
 
@@ -162,8 +302,12 @@ pub fn load_gltf<'a>(
         gltf_obj = env.take_rust_field(this, "rust_gltfObj").unwrap();
     }
 
-    let mut loaded_gltf = LoadedGltf::new();
+    let loaded_gltf = LoadedGltf::new();
+    let loaded_gltf_wrapper = LoadedGltfWrapper::new(loaded_gltf);
+
+    // Load buffers.
     gltf_obj.buffers().for_each(|it| {
+        let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         if let buffer::Source::Uri(uri) = it.source() {
             let uri_jstr = env.new_string(uri).unwrap();
             let data_arr = invoke_native_callback(
@@ -175,7 +319,9 @@ pub fn load_gltf<'a>(
                     let data_arr_len = env.get_array_length(&data_arr).unwrap();
                     let mut data = util::new_buffer_vec(data_arr_len as usize, 0);
                     env.get_byte_array_region(data_arr, 0, data.as_mut_slice()).unwrap();
-                    let buf = LoadedGltfBuffer::new(String::from(uri), data.iter().map(|x| *x as u8).collect());
+                    let buf = LoadedGltfBuffer::new(
+                        loaded_gltf_wrapper.get(), it.index(), String::from(uri),
+                        data.iter().map(|x| *x as u8).collect());
                     loaded_gltf.get_buffers_mut().push(buf);
                 }
                 Err(err) => {
@@ -186,7 +332,18 @@ pub fn load_gltf<'a>(
             }
         }
     });
+
+    // Load buffer views.
+    gltf_obj.views().for_each(|it| {
+        let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
+        let loaded_buffer_view = LoadedGltfBufferView::new_from_view(
+            loaded_gltf_wrapper.get(), &it);
+        loaded_gltf.get_buffer_views_mut().push(loaded_buffer_view);
+    });
+
+    // Load images.
     gltf_obj.images().for_each(|it| {
+        let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         if let image::Source::Uri { uri, mime_type } = it.source() {
             let mime_type = mime_type.unwrap_or("");
             let uri_jstr = env.new_string(uri).unwrap();
@@ -200,7 +357,9 @@ pub fn load_gltf<'a>(
                     let data_arr_len = env.get_array_length(&data_arr).unwrap();
                     let mut data = util::new_buffer_vec(data_arr_len as usize, 0);
                     env.get_byte_array_region(data_arr, 0, data.as_mut_slice()).unwrap();
-                    let img = LoadedGltfImage::new(String::from(uri), data.iter().map(|x| *x as u8).collect());
+                    let img = LoadedGltfImage::new(
+                        loaded_gltf_wrapper.get(), it.index(), String::from(uri),
+                        data.iter().map(|x| *x as u8).collect());
                     loaded_gltf.get_images_mut().push(img);
                 }
                 Err(err) => {
@@ -213,7 +372,7 @@ pub fn load_gltf<'a>(
     });
 
     unsafe {
-        env.set_rust_field(this, "rust_loadedGltfObj", loaded_gltf).unwrap_or_else(|err| {
+        env.set_rust_field(this, "rust_loadedGltfObj", loaded_gltf_wrapper).unwrap_or_else(|err| {
             util::jni::clear_exception_if_occurred(env);
             util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_loadedGltfObj: {}", err)).unwrap()
         });
@@ -273,14 +432,15 @@ pub fn handle_get_image_data_by_uri<'a>(
     this: &JObject<'a>,
     uri_jstr: &JString
 ) -> jbyteArray {
-    let loaded_gltf_obj: LoadedGltf;
+    let loaded_gltf_obj: LoadedGltfWrapper;
     unsafe {
         loaded_gltf_obj = env.take_rust_field(this, "rust_loadedGltfObj").unwrap();
     }
 
     let uri = String::from(env.get_string(uri_jstr).unwrap());
     let mut target_img: Option<&LoadedGltfImage> = None;
-    for image in loaded_gltf_obj.get_images() {
+    let loaded_gltf = loaded_gltf_obj.get().lock().unwrap();
+    for image in loaded_gltf.get_images() {
         if image.uri == uri {
             target_img = Some(image);
             break;
@@ -292,6 +452,8 @@ pub fn handle_get_image_data_by_uri<'a>(
         result = Vec::with_capacity(image.data.len());
         image.data.iter().for_each(|x| result.push(*x));
     }
+    
+    drop(loaded_gltf);
 
     unsafe {
         env.set_rust_field(this, "rust_loadedGltfObj", loaded_gltf_obj).unwrap_or_else(|err| {

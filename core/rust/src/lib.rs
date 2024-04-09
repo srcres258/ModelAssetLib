@@ -6,6 +6,7 @@ use jni::sys::{jboolean, jbyteArray, jint, jstring};
 
 pub mod jniimpl;
 pub mod util;
+pub mod constants;
 
 // Class: top.srcres.mods.modelassetlib.jni.NativeLibrary
 // File: top/srcres/mods/modelassetlib/jni/NativeLibrary.kt
