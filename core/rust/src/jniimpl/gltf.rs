@@ -5,11 +5,12 @@ extern crate anyhow;
 use jni::JNIEnv;
 use jni::objects::{JByteArray, JObject, JString, JValue, JValueOwned};
 use anyhow::Result;
-use gltf::{buffer, image};
+use gltf::{Accessor, buffer, image};
 use jni::sys::{jbyte, jbyteArray, jsize};
 use crate::util;
 use std::sync::{Arc, Mutex};
 use gltf::buffer::View;
+use gltf::json::Value;
 
 pub struct LoadedGltfBuffer {
     gltf: Arc<Mutex<LoadedGltf>>,
@@ -28,6 +29,16 @@ pub struct LoadedGltfBufferView {
     target: Option<buffer::Target>
 }
 
+pub struct  LoadedGltfAccessor {
+    gltf: Arc<Mutex<LoadedGltf>>,
+    index: usize,
+    buffer_view_index: usize,
+    comp_size: usize,
+    comp_count: usize,
+    max_values: Option<Vec<Value>>,
+    min_values: Option<Vec<Value>>
+}
+
 pub struct LoadedGltfImage {
     gltf: Arc<Mutex<LoadedGltf>>,
     index: usize,
@@ -38,6 +49,7 @@ pub struct LoadedGltfImage {
 pub struct LoadedGltf {
     buffers: Vec<LoadedGltfBuffer>,
     buffer_views: Vec<LoadedGltfBufferView>,
+    accessors: Vec<LoadedGltfAccessor>,
     images: Vec<LoadedGltfImage>
 }
 
@@ -53,6 +65,10 @@ impl LoadedGltfBuffer {
             uri,
             data
         }
+    }
+
+    fn get_gltf(&self) -> Arc<Mutex<LoadedGltf>> {
+        Arc::clone(&self.gltf)
     }
 
     fn get_index(&self) -> usize {
@@ -96,6 +112,14 @@ impl LoadedGltfBufferView {
     fn new_from_view(gltf: &Arc<Mutex<LoadedGltf>>, view: &View) -> Self {
         Self::new(gltf, view.index(), view.buffer().index(), view.offset(),
                   view.length(), view.stride(), view.target())
+    }
+
+    fn get_gltf(&self) -> Arc<Mutex<LoadedGltf>> {
+        Arc::clone(&self.gltf)
+    }
+
+    fn get_buffer_index(&self) -> usize {
+        self.buffer_index
     }
 
     fn get_index(&self) -> usize {
@@ -142,6 +166,109 @@ impl LoadedGltfBufferView {
     }
 }
 
+impl LoadedGltfAccessor {
+    fn new(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        index: usize,
+        buffer_view_index: usize,
+        comp_size: usize,
+        comp_count: usize,
+        max_values: Option<Vec<Value>>,
+        min_values: Option<Vec<Value>>
+    ) -> Self {
+        Self {
+            gltf: Arc::clone(gltf),
+            index,
+            buffer_view_index,
+            comp_size,
+            comp_count,
+            max_values,
+            min_values
+        }
+    }
+
+    fn new_from_accessor(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        accessor: &Accessor
+    ) -> Option<Self> {
+        if let Some(max_val) = accessor.max() {
+            if let Value::Array(max_val_arr) = max_val {
+                if let Some(min_val) = accessor.min() {
+                    if let Value::Array(min_val_arr) = min_val {
+                        Some(Self::new(
+                            gltf, accessor.index(), accessor.view().unwrap().index(),accessor.size(),
+                            accessor.count(), Some(max_val_arr), Some(min_val_arr)))
+                    } else {
+                        Some(Self::new(
+                            gltf, accessor.index(), accessor.view().unwrap().index(),
+                            accessor.size(), accessor.count(), Some(max_val_arr), None))
+                    }
+                } else {
+                    Some(Self::new(
+                        gltf, accessor.index(), accessor.view().unwrap().index(),
+                        accessor.size(), accessor.count(), Some(max_val_arr), None))
+                }
+            } else if let Some(min_val) = accessor.min() {
+                if let Value::Array(min_val_arr) = min_val {
+                    Some(Self::new(
+                        gltf, accessor.index(), accessor.view().unwrap().index(),
+                        accessor.size(), accessor.count(), None, Some(min_val_arr)))
+                } else {
+                    Some(Self::new(
+                        gltf, accessor.index(), accessor.view().unwrap().index(),
+                        accessor.size(), accessor.count(), None, None))
+                }
+            } else {
+                Some(Self::new(
+                    gltf, accessor.index(), accessor.view().unwrap().index(),
+                    accessor.size(), accessor.count(), None, None))
+            }
+        } else if let Some(min_val) = accessor.min() {
+            if let Value::Array(min_val_arr) = min_val {
+                Some(Self::new(
+                    gltf, accessor.index(), accessor.view().unwrap().index(),
+                    accessor.size(), accessor.count(), None, Some(min_val_arr)))
+            } else {
+                Some(Self::new(
+                    gltf, accessor.index(), accessor.view().unwrap().index(),
+                    accessor.size(), accessor.count(), None, None))
+            }
+        } else {
+            Some(Self::new(
+                gltf, accessor.index(), accessor.view().unwrap().index(),
+                accessor.size(), accessor.count(), None, None))
+        }
+    }
+
+    fn get_gltf(&self) -> Arc<Mutex<LoadedGltf>> {
+        Arc::clone(&self.gltf)
+    }
+
+    fn get_index(&self) -> usize {
+        self.index
+    }
+
+    fn get_buffer_view_index(&self) -> usize {
+        self.buffer_view_index
+    }
+
+    fn get_comp_size(&self) -> usize {
+        self.comp_size
+    }
+
+    fn get_comp_count(&self) -> usize {
+        self.comp_count
+    }
+
+    fn get_max_values(&self) -> Option<Vec<Value>> {
+        self.max_values.clone()
+    }
+
+    fn get_min_values(&self) -> Option<Vec<Value>> {
+        self.min_values.clone()
+    }
+}
+
 impl LoadedGltfImage {
     fn new(gltf: &Arc<Mutex<LoadedGltf>>, index: usize, uri: String, data: Vec<u8>) -> Self {
         Self {
@@ -166,6 +293,7 @@ impl LoadedGltf {
         Self {
             buffers: Vec::new(),
             buffer_views: Vec::new(),
+            accessors: Vec::new(),
             images: Vec::new()
         }
     }
@@ -184,6 +312,14 @@ impl LoadedGltf {
 
     pub fn get_buffer_views_mut(&mut self) -> &mut Vec<LoadedGltfBufferView> {
         &mut self.buffer_views
+    }
+    
+    pub fn get_accessors(&self) -> &Vec<LoadedGltfAccessor> {
+        &self.accessors
+    }
+    
+    pub fn get_accessors_mut(&mut self) -> &mut Vec<LoadedGltfAccessor> {
+        &mut self.accessors
     }
 
     pub fn get_images(&self) -> &Vec<LoadedGltfImage> {
@@ -339,6 +475,14 @@ pub fn load_gltf<'a>(
         let loaded_buffer_view = LoadedGltfBufferView::new_from_view(
             loaded_gltf_wrapper.get(), &it);
         loaded_gltf.get_buffer_views_mut().push(loaded_buffer_view);
+    });
+
+    // Load accessors.
+    gltf_obj.accessors().for_each(|it| {
+        let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
+        let loaded_accessor = LoadedGltfAccessor::new_from_accessor(
+            loaded_gltf_wrapper.get(), &it).unwrap();
+        loaded_gltf.get_accessors_mut().push(loaded_accessor);
     });
 
     // Load images.
