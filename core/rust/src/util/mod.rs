@@ -2,6 +2,7 @@ pub mod jni;
 pub mod error_message;
 pub mod image;
 pub mod bits;
+pub mod gltf;
 
 pub fn new_buffer_vec<T>(
     capacity: usize,
