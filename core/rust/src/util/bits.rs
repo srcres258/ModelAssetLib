@@ -32,3 +32,24 @@ pub fn i32_to_i8(num: i32) -> (i8, i8, i8, i8) {
     let result = u32_to_u8(num as u32);
     (result.0 as i8, result.1 as i8, result.2 as i8, result.3 as i8)
 }
+
+pub fn u8_to_f32(bits: (u8, u8, u8, u8)) -> f32 {
+    f32::from_bits(u8_to_u32(bits))
+}
+
+pub fn f32_to_u8(num: f32) -> (u8, u8, u8, u8) {
+    u32_to_u8(num.to_bits())
+}
+
+pub fn i8_to_f32(bits: (i8, i8, i8, i8)) -> f32 {
+    u8_to_f32((bits.0 as u8,
+               bits.1 as u8,
+               bits.2 as u8,
+               bits.3 as u8))
+}
+
+pub fn f32_to_i8(num: f32) -> (i8, i8, i8, i8) {
+    let result = f32_to_u8(num);
+    (result.0 as i8, result.1 as i8,
+     result.2 as i8, result.3 as i8)
+}
