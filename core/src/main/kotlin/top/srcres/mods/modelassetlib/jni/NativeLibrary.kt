@@ -13,7 +13,13 @@ object NativeLibrary {
         "Windows NT" -> "modelassetlib_native.dll"
         "Mac OS" -> "libmodelassetlib_native.dylib"
         "Mac OS X" -> "libmodelassetlib_native.dylib"
-        else -> throw UnsupportedOSException(osName)
+        else -> {
+            if (osName.contains("Windows")) {
+                "modelassetlib_native.dll"
+            } else {
+                throw UnsupportedOSException(osName)
+            }
+        }
     }
 
     private fun genRandomTmpName(): String {
