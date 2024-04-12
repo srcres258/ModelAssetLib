@@ -63,7 +63,6 @@ class Image(rawData: ByteArray, format: Optional<ImageFormat>) : AutoCloseable {
                     nativeClearError()
                     it
                 }
-                nativeClearError()
             }
         }
     }
