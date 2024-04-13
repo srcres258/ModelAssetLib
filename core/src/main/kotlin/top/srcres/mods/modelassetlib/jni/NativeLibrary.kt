@@ -52,6 +52,7 @@ object NativeLibrary {
         ModelAssetLib.logger.info("Native library was saved to ${tmpFile.absolutePath} for loading by JVM.")
 
         System.load(tmpFile.absolutePath)
+        ModelAssetLib.logger.info("Successfully loaded JNI native library: ${tmpFile.absolutePath}")
     }
 
     fun initNative() {
