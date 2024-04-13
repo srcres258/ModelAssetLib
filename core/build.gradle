@@ -156,12 +156,23 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
-def osLibMap = [
-        "x86_64-unknown-linux-gnu": "libmodelassetlib_native.so", // Linux
-        "x86_64-pc-windows-gnu": "modelassetlib_native.dll", // Windows
-        "x86_64-apple-darwin": "libmodelassetlib_native.dylib", // macOS
-]
+//def osLibMap = [
+//        "x86_64-unknown-linux-gnu": "libmodelassetlib_native.so", // Linux
+//        "x86_64-pc-windows-gnu": "modelassetlib_native.dll", // Windows
+//        "x86_64-apple-darwin": "libmodelassetlib_native.dylib", // macOS
+//]
+def osLibMap = new LinkedHashMap()
 def releaseLib = project.library_release.equalsIgnoreCase("true")
+
+// Linux build target
+if (project.library_linuxTargetBuildEnable.equalsIgnoreCase("true"))
+    osLibMap.put(project.library_linuxTarget, "libmodelassetlib_native.so")
+// Windows build target
+if (project.library_windowsTargetBuildEnable.equalsIgnoreCase("true"))
+    osLibMap.put(project.library_windowsTarget, "modelassetlib_native.dll")
+// macOS build target
+if (project.library_macOSTargetBuildEnable.equalsIgnoreCase("true"))
+    osLibMap.put(project.library_macOSTarget, "libmodelassetlib_native.dylib")
 
 task processNativeLib(type: Task) {
     def targetPath = ((java.io.File) projectDir).toPath()
