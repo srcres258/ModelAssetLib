@@ -2,12 +2,13 @@ extern crate gltf;
 extern crate nalgebra;
 
 use std::ops::Index;
-use gltf::{Accessor, buffer};
-use crate::util;
+use gltf::{Accessor, buffer, texture};
+use crate::{constants, util};
 use std::sync::{Arc, Mutex};
 use gltf::accessor::Dimensions;
 use gltf::buffer::View;
 use gltf::json::Value;
+use gltf::texture::{MagFilter, MinFilter, WrappingMode};
 use nalgebra::{Matrix2, Matrix3, Matrix4, SMatrix, SVector, Vector2, Vector3, Vector4};
 
 pub struct LoadedGltfBuffer {
@@ -45,11 +46,23 @@ pub struct LoadedGltfImage {
     data: Vec<u8>
 }
 
+pub struct LoadedGltfSampler {
+    gltf: Arc<Mutex<LoadedGltf>>,
+    /// None if the sampler is the default one within the glTF.
+    index: Option<usize>,
+    mag_filter: Option<MagFilter>,
+    min_filter: Option<MinFilter>,
+    name: Option<String>,
+    wrap_s: WrappingMode,
+    wrap_t: WrappingMode
+}
+
 pub struct LoadedGltf {
     buffers: Vec<LoadedGltfBuffer>,
     buffer_views: Vec<LoadedGltfBufferView>,
     accessors: Vec<LoadedGltfAccessor>,
-    images: Vec<LoadedGltfImage>
+    images: Vec<LoadedGltfImage>,
+    samplers: Vec<LoadedGltfSampler>
 }
 
 pub struct LoadedGltfWrapper {
@@ -691,13 +704,154 @@ impl LoadedGltfImage {
     }
 }
 
+impl LoadedGltfSampler {
+    pub fn new(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        index: Option<usize>,
+        mag_filter: Option<MagFilter>,
+        min_filter: Option<MinFilter>,
+        name: Option<String>,
+        wrap_s: WrappingMode,
+        wrap_t: WrappingMode
+    ) -> Self {
+        Self {
+            gltf: Arc::clone(gltf),
+            index,
+            mag_filter,
+            min_filter,
+            name,
+            wrap_s,
+            wrap_t
+        }
+    }
+
+    pub fn new_from_sampler(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        sampler: &texture::Sampler
+    ) -> Self {
+        let name = match sampler.name() {
+            Some(str) => Some(String::from(str)),
+            None => None
+        };
+        Self::new(
+            gltf,
+            sampler.index(),
+            sampler.mag_filter(),
+            sampler.min_filter(),
+            name,
+            sampler.wrap_s(),
+            sampler.wrap_t())
+    }
+
+    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf>> {
+        Arc::clone(&self.gltf)
+    }
+
+    /// Returns None if the sampler is the default one within the glTF.
+    pub fn get_index(&self) -> Option<usize> {
+        self.index
+    }
+
+    pub fn get_mag_filter(&self) -> Option<MagFilter> {
+        self.mag_filter
+    }
+
+    pub fn get_mag_filter_gl(&self) -> Option<u32> {
+        Some(mag_filter_to_gl_value(self.mag_filter?))
+    }
+
+    pub fn get_min_filter(&self) -> Option<MinFilter> {
+        self.min_filter
+    }
+
+    pub fn get_min_filter_gl(&self) -> Option<u32> {
+        Some(min_filter_to_gl_value(self.min_filter?))
+    }
+
+    pub fn get_name(&self) -> Option<String> {
+        self.name.clone()
+    }
+
+    pub fn get_wrap_s(&self) -> WrappingMode {
+        self.wrap_s
+    }
+
+    pub fn get_wrap_s_gl(&self) -> u32 {
+        wrapping_mode_to_gl_value(self.wrap_s)
+    }
+
+    pub fn get_wrap_t(&self) -> WrappingMode {
+        self.wrap_t
+    }
+
+    pub fn get_wrap_t_gl(&self) -> u32 {
+        wrapping_mode_to_gl_value(self.wrap_t)
+    }
+}
+
+pub fn mag_filter_to_gl_value(filter: MagFilter) -> u32 {
+    match filter {
+        MagFilter::Nearest => constants::opengl::GL_NEAREST,
+        MagFilter::Linear => constants::opengl::GL_LINEAR
+    }
+}
+
+pub fn mag_filter_from_gl_value(value: u32) -> Option<MagFilter> {
+    match value {
+        constants::opengl::GL_NEAREST => Some(MagFilter::Nearest),
+        constants::opengl::GL_LINEAR => Some(MagFilter::Linear),
+        _ => None
+    }
+}
+
+pub fn min_filter_to_gl_value(filter: MinFilter) -> u32 {
+    match filter {
+        MinFilter::Nearest => constants::opengl::GL_NEAREST,
+        MinFilter::Linear => constants::opengl::GL_LINEAR,
+        MinFilter::NearestMipmapNearest => constants::opengl::GL_NEAREST_MIPMAP_NEAREST,
+        MinFilter::LinearMipmapNearest => constants::opengl::GL_LINEAR_MIPMAP_NEAREST,
+        MinFilter::NearestMipmapLinear => constants::opengl::GL_NEAREST_MIPMAP_LINEAR,
+        MinFilter::LinearMipmapLinear => constants::opengl::GL_LINEAR_MIPMAP_LINEAR
+    }
+}
+
+pub fn min_filter_from_gl_value(value: u32) -> Option<MinFilter> {
+    match value {
+        constants::opengl::GL_NEAREST => Some(MinFilter::Nearest),
+        constants::opengl::GL_LINEAR => Some(MinFilter::Linear),
+        constants::opengl::GL_NEAREST_MIPMAP_NEAREST => Some(MinFilter::NearestMipmapNearest),
+        constants::opengl::GL_LINEAR_MIPMAP_NEAREST => Some(MinFilter::LinearMipmapNearest),
+        constants::opengl::GL_NEAREST_MIPMAP_LINEAR => Some(MinFilter::NearestMipmapLinear),
+        constants::opengl::GL_LINEAR_MIPMAP_LINEAR => Some(MinFilter::LinearMipmapLinear),
+        _ => None
+    }
+}
+
+pub fn wrapping_mode_to_gl_value(mode: WrappingMode) -> u32 {
+    match mode {
+        WrappingMode::ClampToEdge => constants::opengl::GL_CLAMP_TO_EDGE,
+        WrappingMode::MirroredRepeat => constants::opengl::GL_MIRRORED_REPEAT,
+        WrappingMode::Repeat => constants::opengl::GL_REPEAT
+    }
+}
+
+pub fn wrapping_mode_from_gl_value(value: u32) -> Option<WrappingMode> {
+    match value {
+        constants::opengl::GL_CLAMP_TO_EDGE => Some(WrappingMode::ClampToEdge),
+        constants::opengl::GL_MIRRORED_REPEAT => Some(WrappingMode::MirroredRepeat),
+        constants::opengl::GL_REPEAT => Some(WrappingMode::Repeat),
+        _ => None
+    }
+}
+
 impl LoadedGltf {
     pub fn new() -> Self {
         Self {
             buffers: Vec::new(),
             buffer_views: Vec::new(),
             accessors: Vec::new(),
-            images: Vec::new()
+            images: Vec::new(),
+            samplers: Vec::new()
         }
     }
 
@@ -731,6 +885,14 @@ impl LoadedGltf {
 
     pub fn get_images_mut(&mut self) -> &mut Vec<LoadedGltfImage> {
         &mut self.images
+    }
+
+    pub fn get_samplers(&self) -> &Vec<LoadedGltfSampler> {
+        &self.samplers
+    }
+
+    pub fn get_samplers_mut(&mut self) -> &mut Vec<LoadedGltfSampler> {
+        &mut self.samplers
     }
 }
 
