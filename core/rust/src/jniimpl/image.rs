@@ -54,7 +54,8 @@ pub fn handle_native_init_with_format<'a>(
     
     let format = util::image::image_format_from_id(format_id)?;
     let data_u8: Vec<u8> = data.iter().map(|x| *x as u8).collect();
-    let mut image_reader = image::io::Reader::new(Cursor::new(data_u8.as_slice()));
+    let mut image_reader = image::io::Reader::new(
+        Cursor::new(data_u8.as_slice()));
     image_reader.set_format(format);
     let image = image_reader.decode()?;
     let rgba8_image: RgbaImage = image.to_rgba8();

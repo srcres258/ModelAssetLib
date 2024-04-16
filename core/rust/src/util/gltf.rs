@@ -57,7 +57,12 @@ pub struct LoadedGltfWrapper {
 }
 
 impl LoadedGltfBuffer {
-    pub fn new(gltf: &Arc<Mutex<LoadedGltf>>, index: usize, uri: String, data: Vec<u8>) -> Self {
+    pub fn new(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        index: usize,
+        uri: String,
+        data: Vec<u8>
+    ) -> Self {
         Self {
             gltf: Arc::clone(gltf),
             index,
@@ -651,7 +656,12 @@ impl LoadedGltfAccessorDatum {
 }
 
 impl LoadedGltfImage {
-    pub fn new(gltf: &Arc<Mutex<LoadedGltf>>, index: usize, uri: String, data: Vec<u8>) -> Self {
+    pub fn new(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        index: usize,
+        uri: String,
+        data: Vec<u8>
+    ) -> Self {
         Self {
             gltf: Arc::clone(gltf),
             index,

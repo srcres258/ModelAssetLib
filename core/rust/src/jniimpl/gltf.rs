@@ -16,14 +16,17 @@ pub fn get_native_callback<'a>(
     env: &mut JNIEnv<'a>,
     this: &JObject<'a>
 ) -> Result<JObject<'a>> {
-    let callback = env.get_field(this, "nativeCallback", "Ltop/srcres/mods/modelassetlib/gltf/Gltf$NativeCallback;");
+    let callback = env.get_field(
+        this, "nativeCallback",
+        "Ltop/srcres/mods/modelassetlib/gltf/Gltf$NativeCallback;");
     match callback {
         Ok(callback) => {
             Ok(callback.l().unwrap())
         }
         Err(err) => {
             util::jni::clear_exception_if_occurred(env);
-            util::jni::throw_runtime_exception(env, &format!("Failed to obtain nativeCallback: {}", err)).unwrap();
+            util::jni::throw_runtime_exception(
+                env, &format!("Failed to obtain nativeCallback: {}", err)).unwrap();
             Err(err.into())
         }
     }
@@ -110,6 +113,51 @@ pub fn load_gltf<'a>(
     let loaded_gltf = LoadedGltf::new();
     let loaded_gltf_wrapper = LoadedGltfWrapper::new(loaded_gltf);
 
+    /*
+    The glTF data hierarchy:
+    (details: Page 1 at https://www.khronos.org/files/gltf20-reference-guide.pdf)
+
+    scene
+    |
+    *-> node <-------------------------*<----------------\
+        |                              |                 |
+        *-> camera                     |                 |
+        |                              |                 |
+        *-> mesh                       |                 |
+            |                          |  #############  |
+            *-> material               |  #  Skins    #<-/
+            |   |                  /------#############
+            |   *-> texture        |   |
+            |       |              |   |  #############
+            |       *-> sampler <--/   \--# Animation #
+            |       |                     #############
+            |       *-> image                   |
+            |                                   |
+            *-> accessor <----------------------/
+                |
+                *-> buffer view
+                    |
+                    *-> buffer
+     */
+
+    /*
+    glTF data's loading order of the following code:
+    0.  buffers
+    1.  biffer views (from 0)
+    2.  accessors (from 1)
+    3.  images
+    4.  samplers
+    5.  textures (from 3 and 4)
+    6.  materials (from 5)
+    7.  meshes (from 2 and 6)
+    8.  cameras
+    9.  nodes (from 7 and 8)
+    10. animations (from 2 and 9)
+    11. skins (from 2 and 9)
+    12. scenes (from 9)
+    13. glTF load finishing-up works (from 12)
+     */
+
     // Load buffers.
     gltf_obj.buffers().for_each(|it| {
         let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
@@ -131,7 +179,8 @@ pub fn load_gltf<'a>(
                 }
                 Err(err) => {
                     util::jni::clear_exception_if_occurred(env);
-                    util::jni::throw_runtime_exception(env, &format!("Failed to load glTF buffer: {}", err)).unwrap();
+                    util::jni::throw_runtime_exception(
+                        env, &format!("Failed to load glTF buffer: {}", err)).unwrap();
                     return;
                 }
             }
@@ -177,21 +226,51 @@ pub fn load_gltf<'a>(
                 }
                 Err(err) => {
                     util::jni::clear_exception_if_occurred(env);
-                    util::jni::throw_runtime_exception(env, &format!("Failed to load glTF buffer: {}", err)).unwrap();
+                    util::jni::throw_runtime_exception(
+                        env, &format!("Failed to load glTF buffer: {}", err)).unwrap();
                     return;
                 }
             }
         }
     });
 
+    // Load samplers.
+    // TODO
+
+    // Load textures.
+    // TODO
+
+    // Load materials.
+    // TODO
+
+    // Load meshes.
+    // TODO
+
+    // Load cameras.
+    // TODO
+
+    // Load nodes.
+    // TODO
+
+    // Load animations.
+    // TODO
+
+    // Load skins.
+    // TODO
+
+    // Do glTF load finishing-up works.
+    // TODO
+
     unsafe {
         env.set_rust_field(this, "rust_loadedGltfObj", loaded_gltf_wrapper).unwrap_or_else(|err| {
             util::jni::clear_exception_if_occurred(env);
-            util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_loadedGltfObj: {}", err)).unwrap()
+            util::jni::throw_runtime_exception(
+                env, &format!("Failed to set rust object rust_loadedGltfObj: {}", err)).unwrap()
         });
         env.set_rust_field(this, "rust_gltfObj", gltf_obj).unwrap_or_else(|err| {
             util::jni::clear_exception_if_occurred(env);
-            util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_gltfObj: {}", err)).unwrap()
+            util::jni::throw_runtime_exception(
+                env, &format!("Failed to set rust object rust_gltfObj: {}", err)).unwrap()
         });
     }
 }
@@ -216,7 +295,8 @@ pub fn announce_gltf_image_uris<'a>(
     unsafe {
         env.set_rust_field(this, "rust_gltfObj", gltf_obj).unwrap_or_else(|err| {
             util::jni::clear_exception_if_occurred(env);
-            util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_gltfObj: {}", err)).unwrap()
+            util::jni::throw_runtime_exception(
+                env, &format!("Failed to set rust object rust_gltfObj: {}", err)).unwrap()
         });
     }
 }
@@ -271,7 +351,8 @@ pub fn handle_get_image_data_by_uri<'a>(
     unsafe {
         env.set_rust_field(this, "rust_loadedGltfObj", loaded_gltf_obj).unwrap_or_else(|err| {
             util::jni::clear_exception_if_occurred(env);
-            util::jni::throw_runtime_exception(env, &format!("Failed to set rust object rust_loadedGltfObj: {}", err)).unwrap()
+            util::jni::throw_runtime_exception(
+                env, &format!("Failed to set rust object rust_loadedGltfObj: {}", err)).unwrap()
         });
     }
 

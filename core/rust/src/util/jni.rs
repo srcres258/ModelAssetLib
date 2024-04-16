@@ -13,8 +13,12 @@ pub fn jboolean_to_bool(val: jboolean) -> bool {
 }
 
 pub fn throw_runtime_exception(env: &mut JNIEnv, message: &String) -> Result<()> {
-    env.throw_new("top/srcres/mods/modelassetlib/NativeRuntimeException", message).with_context(
-        || format!("Failed to throw native runtime exception with message: {}", message))
+    env.throw_new(
+        "top/srcres/mods/modelassetlib/NativeRuntimeException",
+        message
+    ).with_context(
+        || format!("Failed to throw native runtime exception with message: {}", message)
+    )
 }
 
 pub fn clear_exception_if_occurred(env: &mut JNIEnv) {
