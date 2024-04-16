@@ -3,21 +3,13 @@ package top.srcres.mods.modelassetlib.jni
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.packs.resources.ResourceManager
 import top.srcres.mods.modelassetlib.ModelAssetLib
-import top.srcres.mods.modelassetlib.UnsupportedOSException
 import java.io.File
 import java.util.Random
 
 object NativeLibrary {
-    private fun getNativeName(osName: String) = when (osName) {
-        "Linux" -> "libmodelassetlib_native.so"
-        "Windows NT" -> "modelassetlib_native.dll"
-        else -> {
-            if (osName.contains("Windows")) {
-                "modelassetlib_native.dll"
-            } else {
-                throw UnsupportedOSException(osName)
-            }
-        }
+    private fun getNativeName(): String {
+        val os = OSType.detect() ?: throw UnsupportedOSException()
+        return os.nativeFileName
     }
 
     private fun genRandomTmpName(): String {
@@ -31,8 +23,7 @@ object NativeLibrary {
     }
 
     fun loadNative(resManager: ResourceManager) {
-        val osName = System.getProperty("os.name")
-        val nativeName = getNativeName(osName)
+        val nativeName = getNativeName()
         val libRes = resManager.getResource(ResourceLocation(ModelAssetLib.MODID, "lib/$nativeName")).get()
         val tmpDir = System.getProperty("java.io.tmpdir")
         val tmpDirPath = File(tmpDir).toPath()
@@ -59,5 +50,5 @@ object NativeLibrary {
         }
     }
 
-    external fun initNative0(): Boolean
+    private external fun initNative0(): Boolean
 }
