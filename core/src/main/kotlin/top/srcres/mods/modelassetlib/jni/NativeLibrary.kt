@@ -11,8 +11,6 @@ object NativeLibrary {
     private fun getNativeName(osName: String) = when (osName) {
         "Linux" -> "libmodelassetlib_native.so"
         "Windows NT" -> "modelassetlib_native.dll"
-        "Mac OS" -> "libmodelassetlib_native.dylib"
-        "Mac OS X" -> "libmodelassetlib_native.dylib"
         else -> {
             if (osName.contains("Windows")) {
                 "modelassetlib_native.dll"
