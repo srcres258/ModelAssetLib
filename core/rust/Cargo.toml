@@ -1,7 +1,10 @@
 [package]
 name = "modelassetlib-native"
 version = "0.1.0"
+authors = ["src_resources"]
 edition = "2021"
+description = "Native library for Minecraft mod ModelAssetLib."
+license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib"]
