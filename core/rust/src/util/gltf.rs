@@ -57,12 +57,20 @@ pub struct LoadedGltfSampler {
     wrap_t: WrappingMode
 }
 
+pub struct LoadedGltfTexture {
+    gltf: Arc<Mutex<LoadedGltf>>,
+    index: usize,
+    source_index: usize,
+    sampler_index: usize
+}
+
 pub struct LoadedGltf {
     buffers: Vec<LoadedGltfBuffer>,
     buffer_views: Vec<LoadedGltfBufferView>,
     accessors: Vec<LoadedGltfAccessor>,
     images: Vec<LoadedGltfImage>,
-    samplers: Vec<LoadedGltfSampler>
+    samplers: Vec<LoadedGltfSampler>,
+    textures: Vec<LoadedGltfTexture>
 }
 
 pub struct LoadedGltfWrapper {
@@ -844,6 +852,51 @@ pub fn wrapping_mode_from_gl_value(value: u32) -> Option<WrappingMode> {
     }
 }
 
+impl LoadedGltfTexture {
+    pub fn new(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        index: usize,
+        source_index: usize,
+        sampler_index: usize
+    ) -> Self {
+        Self {
+            gltf: Arc::clone(gltf),
+            index,
+            source_index,
+            sampler_index
+        }
+    }
+
+    pub fn new_from_texture(
+        gltf: &Arc<Mutex<LoadedGltf>>,
+        texture: &texture::Texture
+    ) -> Self {
+        Self::new(
+            gltf,
+            texture.index(),
+            texture.source().index(),
+            // We unwrap here because we are sure the sampler has its index
+            // as it has been specified by this texture.
+            texture.sampler().index().unwrap())
+    }
+
+    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf>> {
+        Arc::clone(&self.gltf)
+    }
+
+    pub fn get_index(&self) -> usize {
+        self.index
+    }
+
+    pub fn get_source_index(&self) -> usize {
+        self.source_index
+    }
+
+    pub fn get_sampler_index(&self) -> usize {
+        self.sampler_index
+    }
+}
+
 impl LoadedGltf {
     pub fn new() -> Self {
         Self {
@@ -851,7 +904,8 @@ impl LoadedGltf {
             buffer_views: Vec::new(),
             accessors: Vec::new(),
             images: Vec::new(),
-            samplers: Vec::new()
+            samplers: Vec::new(),
+            textures: Vec::new()
         }
     }
 
@@ -893,6 +947,14 @@ impl LoadedGltf {
 
     pub fn get_samplers_mut(&mut self) -> &mut Vec<LoadedGltfSampler> {
         &mut self.samplers
+    }
+
+    pub fn get_textures(&self) -> &Vec<LoadedGltfTexture> {
+        &self.textures
+    }
+
+    pub fn get_textures_mut(&mut self) -> &mut Vec<LoadedGltfTexture> {
+        &mut self.textures
     }
 }
 

@@ -8,7 +8,7 @@ use anyhow::Result;
 use gltf::{buffer, image};
 use jni::sys::{jbyte, jbyteArray, jsize};
 use crate::util;
-use crate::util::gltf::{LoadedGltfAccessor, LoadedGltf, LoadedGltfBuffer, LoadedGltfWrapper, LoadedGltfImage, LoadedGltfBufferView, LoadedGltfSampler};
+use crate::util::gltf::{LoadedGltfAccessor, LoadedGltf, LoadedGltfBuffer, LoadedGltfWrapper, LoadedGltfImage, LoadedGltfBufferView, LoadedGltfSampler, LoadedGltfTexture};
 
 pub fn get_native_callback<'a>(
     env: &mut JNIEnv<'a>,
@@ -241,7 +241,12 @@ pub fn load_gltf<'a>(
     });
 
     // Load textures.
-    // TODO
+    gltf_obj.textures().for_each(|it| {
+        let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
+        let loaded_texture = LoadedGltfTexture::new_from_texture(
+            loaded_gltf_wrapper.get(), &it);
+        loaded_gltf.get_textures_mut().push(loaded_texture);
+    });
 
     // Load materials.
     // TODO
