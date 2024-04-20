@@ -1,0 +1,19 @@
+on: push
+
+jobs:
+  ubuntu:
+    name: Build project on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout from GitHub repo
+        uses: actions/checkout@v4.1.2
+      - name: Check rustup version
+        run: rustup --version
+      - name: Switch to Rust code directory
+        run: cd core/rust/
+      - name: Build Rust code (for Linux platform only)
+        run: cargo build --release --target=x86_64-unknown-linux-gnu
+      - name: Switch to project root directory
+        run: cd ../../
+      - name: Build the project
+        run: LIBRARY_RELEASE=true FAIL_ON_LIB_MISSING=false ./gradlew :core:build :example:build
