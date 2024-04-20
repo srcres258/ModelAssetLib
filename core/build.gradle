@@ -159,6 +159,7 @@ tasks.withType(JavaCompile).configureEach {
 def osLibMap = new LinkedHashMap()
 def releaseLib = project.library_release.equalsIgnoreCase("true")
         || "true".equalsIgnoreCase(System.getenv("LIBRARY_RELEASE"))
+def failOnLibMissing = "true".equalsIgnoreCase(System.getenv("FAIL_ON_LIB_MISSING"))
 
 // Linux build target
 if (project.library_linuxTargetBuildEnable.equalsIgnoreCase("true"))
@@ -185,9 +186,14 @@ task processNativeLib(type: Task) {
             def libDirPath = targetPath.resolve(entry.key).resolve(subDirName)
             def libPath = libDirPath.resolve(entry.value)
             if (!libPath.toFile().exists()) {
-                throw new RuntimeException(String.format(
-                        "The file '%s' does not exist. Make sure the Rust native library is built by build.sh.",
-                        libPath.toAbsolutePath().toString()))
+                if (failOnLibMissing)
+                    throw new RuntimeException(String.format(
+                            "The file '%s' does not exist. Make sure the Rust native library is built by build.sh.",
+                            libPath.toAbsolutePath().toString()))
+                else
+                    logger.warn(String.format(
+                            "The file '%s' does not exist. Make sure the Rust native library is built by build.sh.",
+                            libPath.toAbsolutePath().toString()))
             }
             libPathNames.add(libPath.toAbsolutePath().toString())
         }
