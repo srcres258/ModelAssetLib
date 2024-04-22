@@ -106,23 +106,23 @@ impl<'a> LoadedGltfBuffer<'a> {
         }
     }
 
-    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
+    pub fn gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
         Arc::clone(&self.gltf)
     }
 
-    pub fn get_index(&self) -> usize {
+    pub fn index(&self) -> usize {
         self.index
     }
 
-    pub fn get_uri(&self) -> &String {
+    pub fn uri(&self) -> &String {
         &self.uri
     }
 
-    pub fn get_data(&self) -> &Vec<u8> {
+    pub fn data(&self) -> &Vec<u8> {
         &self.data
     }
 
-    pub fn get_data_ptr(&self) -> *const u8 {
+    pub fn data_ptr(&self) -> *const u8 {
         self.data.as_ptr()
     }
 }
@@ -165,31 +165,31 @@ impl<'a> LoadedGltfBufferView<'a> {
                   view.length(), view.stride(), view.target())
     }
 
-    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
+    pub fn gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
         Arc::clone(&self.gltf)
     }
 
-    pub fn get_buffer_index(&self) -> usize {
+    pub fn buffer_index(&self) -> usize {
         self.buffer_index
     }
 
-    pub fn get_index(&self) -> usize {
+    pub fn index(&self) -> usize {
         self.index
     }
 
-    pub fn get_data_offset(&self) -> usize {
+    pub fn data_offset(&self) -> usize {
         self.data_offset
     }
 
-    pub fn get_data_length(&self) -> usize {
+    pub fn data_length(&self) -> usize {
         self.data_length
     }
 
-    pub fn get_data_stride(&self) -> Option<usize> {
+    pub fn data_stride(&self) -> Option<usize> {
         self.data_stride
     }
 
-    pub fn get_target(&self) -> Option<buffer::Target> {
+    pub fn target(&self) -> Option<buffer::Target> {
         self.target
     }
 
@@ -199,11 +199,11 @@ impl<'a> LoadedGltfBufferView<'a> {
 
     pub fn load_data_strided(&self, stride_count: u32) -> Vec<u8> {
         let gltf = self.gltf.lock().unwrap();
-        let buffer = gltf.get_buffers().get(self.buffer_index).unwrap();
+        let buffer = gltf.buffers().get(self.buffer_index).unwrap();
         let mut result = util::new_buffer_vec(self.data_length, 0u8);
         let result_ptr = result.as_mut_ptr();
         unsafe {
-            let data_ptr = buffer.get_data_ptr().add(self.data_offset)
+            let data_ptr = buffer.data_ptr().add(self.data_offset)
                 .add((stride_count as usize) * self.data_stride.unwrap_or(0));
             let mut result_ptrm = result_ptr;
             let mut data_ptrm = data_ptr;
@@ -293,35 +293,35 @@ impl<'a> LoadedGltfAccessor<'a> {
         }
     }
 
-    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
+    pub fn gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
         Arc::clone(&self.gltf)
     }
 
-    pub fn get_index(&self) -> usize {
+    pub fn index(&self) -> usize {
         self.index
     }
 
-    pub fn get_buffer_view_index(&self) -> usize {
+    pub fn buffer_view_index(&self) -> usize {
         self.buffer_view_index
     }
 
-    pub fn get_comp_size(&self) -> usize {
+    pub fn comp_size(&self) -> usize {
         self.comp_size
     }
 
-    pub fn get_comp_count(&self) -> usize {
+    pub fn comp_count(&self) -> usize {
         self.comp_count
     }
 
-    pub fn get_max_values(&self) -> Option<Vec<Value>> {
+    pub fn max_values(&self) -> Option<Vec<Value>> {
         self.max_values.clone()
     }
 
-    pub fn get_min_values(&self) -> Option<Vec<Value>> {
+    pub fn min_values(&self) -> Option<Vec<Value>> {
         self.min_values.clone()
     }
 
-    pub fn get_dimensions(&self) -> Dimensions {
+    pub fn dimensions(&self) -> Dimensions {
         self.dimensions
     }
 
@@ -677,7 +677,7 @@ impl LoadedGltfAccessorDatum {
         Self::Mat4(mat)
     }
 
-    pub fn get_dimension(&self) -> usize {
+    pub fn dimension(&self) -> usize {
         match *self {
             Self::Scalar(_) => 1,
             Self::Vec2(_) => 2,
@@ -705,23 +705,23 @@ impl<'a> LoadedGltfImage<'a> {
         }
     }
 
-    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
+    pub fn gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
         Arc::clone(&self.gltf)
     }
 
-    pub fn get_index(&self) -> usize {
+    pub fn index(&self) -> usize {
         self.index
     }
 
-    pub fn get_uri(&self) -> &String {
+    pub fn uri(&self) -> &String {
         &self.uri
     }
 
-    pub fn get_data(&self) -> &Vec<u8> {
+    pub fn data(&self) -> &Vec<u8> {
         &self.data
     }
 
-    pub fn get_data_ptr(&self) -> *const u8 {
+    pub fn data_ptr(&self) -> *const u8 {
         self.data.as_ptr()
     }
 }
@@ -765,48 +765,48 @@ impl<'a> LoadedGltfSampler<'a> {
             sampler.wrap_t())
     }
 
-    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
+    pub fn gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
         Arc::clone(&self.gltf)
     }
 
     /// Returns None if the sampler is the default one within the glTF.
-    pub fn get_index(&self) -> Option<usize> {
+    pub fn index(&self) -> Option<usize> {
         self.index
     }
 
-    pub fn get_mag_filter(&self) -> Option<MagFilter> {
+    pub fn mag_filter(&self) -> Option<MagFilter> {
         self.mag_filter
     }
 
-    pub fn get_mag_filter_gl(&self) -> Option<u32> {
+    pub fn mag_filter_gl(&self) -> Option<u32> {
         Some(mag_filter_to_gl_value(self.mag_filter?))
     }
 
-    pub fn get_min_filter(&self) -> Option<MinFilter> {
+    pub fn min_filter(&self) -> Option<MinFilter> {
         self.min_filter
     }
 
-    pub fn get_min_filter_gl(&self) -> Option<u32> {
+    pub fn min_filter_gl(&self) -> Option<u32> {
         Some(min_filter_to_gl_value(self.min_filter?))
     }
 
-    pub fn get_name(&self) -> Option<String> {
+    pub fn name(&self) -> Option<String> {
         self.name.clone()
     }
 
-    pub fn get_wrap_s(&self) -> WrappingMode {
+    pub fn wrap_s(&self) -> WrappingMode {
         self.wrap_s
     }
 
-    pub fn get_wrap_s_gl(&self) -> u32 {
+    pub fn wrap_s_gl(&self) -> u32 {
         wrapping_mode_to_gl_value(self.wrap_s)
     }
 
-    pub fn get_wrap_t(&self) -> WrappingMode {
+    pub fn wrap_t(&self) -> WrappingMode {
         self.wrap_t
     }
 
-    pub fn get_wrap_t_gl(&self) -> u32 {
+    pub fn wrap_t_gl(&self) -> u32 {
         wrapping_mode_to_gl_value(self.wrap_t)
     }
 }
@@ -894,19 +894,19 @@ impl<'a> LoadedGltfTexture<'a> {
             texture.sampler().index().unwrap())
     }
 
-    pub fn get_gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
+    pub fn gltf(&self) -> Arc<Mutex<LoadedGltf<'a>>> {
         Arc::clone(&self.gltf)
     }
 
-    pub fn get_index(&self) -> usize {
+    pub fn index(&self) -> usize {
         self.index
     }
 
-    pub fn get_source_index(&self) -> usize {
+    pub fn source_index(&self) -> usize {
         self.source_index
     }
 
-    pub fn get_sampler_index(&self) -> usize {
+    pub fn sampler_index(&self) -> usize {
         self.sampler_index
     }
 }
@@ -1050,59 +1050,59 @@ impl<'a> LoadedGltf<'a> {
         }
     }
 
-    pub fn get_buffers(&self) -> &Vec<LoadedGltfBuffer<'a>> {
+    pub fn buffers(&self) -> &Vec<LoadedGltfBuffer<'a>> {
         &self.buffers
     }
 
-    pub fn get_buffers_mut(&mut self) -> &mut Vec<LoadedGltfBuffer<'a>> {
+    pub fn buffers_mut(&mut self) -> &mut Vec<LoadedGltfBuffer<'a>> {
         &mut self.buffers
     }
 
-    pub fn get_buffer_views(&self) -> &Vec<LoadedGltfBufferView<'a>> {
+    pub fn buffer_views(&self) -> &Vec<LoadedGltfBufferView<'a>> {
         &self.buffer_views
     }
 
-    pub fn get_buffer_views_mut(&mut self) -> &mut Vec<LoadedGltfBufferView<'a>> {
+    pub fn buffer_views_mut(&mut self) -> &mut Vec<LoadedGltfBufferView<'a>> {
         &mut self.buffer_views
     }
 
-    pub fn get_accessors(&self) -> &Vec<LoadedGltfAccessor<'a>> {
+    pub fn accessors(&self) -> &Vec<LoadedGltfAccessor<'a>> {
         &self.accessors
     }
 
-    pub fn get_accessors_mut(&mut self) -> &mut Vec<LoadedGltfAccessor<'a>> {
+    pub fn accessors_mut(&mut self) -> &mut Vec<LoadedGltfAccessor<'a>> {
         &mut self.accessors
     }
 
-    pub fn get_images(&self) -> &Vec<LoadedGltfImage<'a>> {
+    pub fn images(&self) -> &Vec<LoadedGltfImage<'a>> {
         &self.images
     }
 
-    pub fn get_images_mut(&mut self) -> &mut Vec<LoadedGltfImage<'a>> {
+    pub fn images_mut(&mut self) -> &mut Vec<LoadedGltfImage<'a>> {
         &mut self.images
     }
 
-    pub fn get_samplers(&self) -> &Vec<LoadedGltfSampler<'a>> {
+    pub fn samplers(&self) -> &Vec<LoadedGltfSampler<'a>> {
         &self.samplers
     }
 
-    pub fn get_samplers_mut(&mut self) -> &mut Vec<LoadedGltfSampler<'a>> {
+    pub fn samplers_mut(&mut self) -> &mut Vec<LoadedGltfSampler<'a>> {
         &mut self.samplers
     }
 
-    pub fn get_textures(&self) -> &Vec<LoadedGltfTexture<'a>> {
+    pub fn textures(&self) -> &Vec<LoadedGltfTexture<'a>> {
         &self.textures
     }
 
-    pub fn get_textures_mut(&mut self) -> &mut Vec<LoadedGltfTexture<'a>> {
+    pub fn textures_mut(&mut self) -> &mut Vec<LoadedGltfTexture<'a>> {
         &mut self.textures
     }
 
-    pub fn get_materials(&self) -> &Vec<LoadedGltfMaterial<'a>> {
+    pub fn materials(&self) -> &Vec<LoadedGltfMaterial<'a>> {
         &self.materials
     }
 
-    pub fn get_materials_mut(&mut self) -> &mut Vec<LoadedGltfMaterial<'a>> {
+    pub fn materials_mut(&mut self) -> &mut Vec<LoadedGltfMaterial<'a>> {
         &mut self.materials
     }
 }

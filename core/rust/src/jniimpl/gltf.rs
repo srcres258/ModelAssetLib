@@ -173,7 +173,7 @@ pub fn load_gltf<'a>(
                     let buf = LoadedGltfBuffer::new(
                         loaded_gltf_wrapper.get(), it.index(), String::from(uri),
                         data.iter().map(|x| *x as u8).collect());
-                    loaded_gltf.get_buffers_mut().push(buf);
+                    loaded_gltf.buffers_mut().push(buf);
                 }
                 Err(err) => {
                     util::jni::clear_exception_if_occurred(env);
@@ -190,7 +190,7 @@ pub fn load_gltf<'a>(
         let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         let loaded_buffer_view = LoadedGltfBufferView::new_from_view(
             loaded_gltf_wrapper.get(), &it);
-        loaded_gltf.get_buffer_views_mut().push(loaded_buffer_view);
+        loaded_gltf.buffer_views_mut().push(loaded_buffer_view);
     });
 
     // Load accessors.
@@ -198,7 +198,7 @@ pub fn load_gltf<'a>(
         let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         let loaded_accessor = LoadedGltfAccessor::new_from_accessor(
             loaded_gltf_wrapper.get(), &it).unwrap();
-        loaded_gltf.get_accessors_mut().push(loaded_accessor);
+        loaded_gltf.accessors_mut().push(loaded_accessor);
     });
 
     // Load images.
@@ -220,7 +220,7 @@ pub fn load_gltf<'a>(
                     let img = LoadedGltfImage::new(
                         loaded_gltf_wrapper.get(), it.index(), String::from(uri),
                         data.iter().map(|x| *x as u8).collect());
-                    loaded_gltf.get_images_mut().push(img);
+                    loaded_gltf.images_mut().push(img);
                 }
                 Err(err) => {
                     util::jni::clear_exception_if_occurred(env);
@@ -237,7 +237,7 @@ pub fn load_gltf<'a>(
         let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         let loaded_sampler = LoadedGltfSampler::new_from_sampler(
             loaded_gltf_wrapper.get(), &it);
-        loaded_gltf.get_samplers_mut().push(loaded_sampler);
+        loaded_gltf.samplers_mut().push(loaded_sampler);
     });
 
     // Load textures.
@@ -245,7 +245,7 @@ pub fn load_gltf<'a>(
         let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         let loaded_texture = LoadedGltfTexture::new_from_texture(
             loaded_gltf_wrapper.get(), &it);
-        loaded_gltf.get_textures_mut().push(loaded_texture);
+        loaded_gltf.textures_mut().push(loaded_texture);
     });
 
     // Load materials.
@@ -253,7 +253,7 @@ pub fn load_gltf<'a>(
         let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
         let loaded_material = LoadedGltfMaterial::new_from_material(
             loaded_gltf_wrapper.get(), &it);
-        loaded_gltf.get_materials_mut().push(loaded_material);
+        loaded_gltf.materials_mut().push(loaded_material);
     });
 
     // Load meshes.
@@ -346,8 +346,8 @@ pub fn handle_get_image_data_by_uri<'a>(
     let uri = String::from(env.get_string(uri_jstr).unwrap());
     let mut target_img: Option<&LoadedGltfImage> = None;
     let loaded_gltf = loaded_gltf_obj.get().lock().unwrap();
-    for image in loaded_gltf.get_images() {
-        if *image.get_uri() == uri {
+    for image in loaded_gltf.images() {
+        if *image.uri() == uri {
             target_img = Some(image);
             break;
         }
@@ -355,8 +355,8 @@ pub fn handle_get_image_data_by_uri<'a>(
 
     let mut result: Vec<u8> = Vec::new();
     if let Some(image) = target_img {
-        result = Vec::with_capacity(image.get_data().len());
-        image.get_data().iter().for_each(|x| result.push(*x));
+        result = Vec::with_capacity(image.data().len());
+        image.data().iter().for_each(|x| result.push(*x));
     }
     
     drop(loaded_gltf);
