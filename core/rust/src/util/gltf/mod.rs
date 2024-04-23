@@ -4,6 +4,8 @@ extern crate nalgebra;
 mod loaded;
 
 use gltf::texture::{MagFilter, MinFilter, WrappingMode};
+use crate::constants;
+
 pub use loaded::LoadedGltfBuffer;
 pub use loaded::LoadedGltfBufferView;
 pub use loaded::LoadedGltfAccessor;
@@ -13,7 +15,6 @@ pub use loaded::LoadedGltfTexture;
 pub use loaded::LoadedGltfMaterial;
 pub use loaded::LoadedGltf;
 pub use loaded::LoadedGltfWrapper;
-use crate::constants;
 
 pub type GltfVecNum = f32;
 
