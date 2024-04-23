@@ -141,7 +141,7 @@ pub fn load_gltf<'a>(
     /*
     glTF data's loading order of the following code:
     0.  buffers
-    1.  biffer views (from 0)
+    1.  buffer views (from 0)
     2.  accessors (from 1)
     3.  images
     4.  samplers
