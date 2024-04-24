@@ -1,7 +1,8 @@
 pub mod material;
+pub mod mesh;
 
 use std::ops::Index;
-use gltf::{Accessor, buffer, Material, texture};
+use gltf::{Accessor, buffer, Material, Mesh, texture};
 use crate::util;
 use std::sync::{Arc, Mutex};
 use gltf::accessor::Dimensions;
@@ -75,6 +76,14 @@ pub struct LoadedGltfMaterial<'a> {
     emissive_factor: material::EmissiveFactorInfo
 }
 
+pub struct LoadedGltfMesh<'a> {
+    gltf: Arc<Mutex<LoadedGltf<'a>>>,
+    index: usize,
+    primitives: Vec<mesh::PrimitiveInfo>,
+    /// Empty if not defined in glTF, or defined but values are not given.
+    weights: Vec<f32>
+}
+
 pub struct LoadedGltf<'a> {
     buffers: Vec<LoadedGltfBuffer<'a>>,
     buffer_views: Vec<LoadedGltfBufferView<'a>>,
@@ -82,7 +91,8 @@ pub struct LoadedGltf<'a> {
     images: Vec<LoadedGltfImage<'a>>,
     samplers: Vec<LoadedGltfSampler<'a>>,
     textures: Vec<LoadedGltfTexture<'a>>,
-    materials: Vec<LoadedGltfMaterial<'a>>
+    materials: Vec<LoadedGltfMaterial<'a>>,
+    meshes: Vec<LoadedGltfMesh<'a>>
 }
 
 pub struct LoadedGltfWrapper<'a> {
@@ -978,6 +988,65 @@ impl<'a> LoadedGltfMaterial<'a> {
     }
 }
 
+impl<'a> LoadedGltfMesh<'a> {
+    pub fn new(
+        gltf: &Arc<Mutex<LoadedGltf<'a>>>,
+        index: usize,
+        primitives: Vec<mesh::PrimitiveInfo>,
+        weights: Vec<f32>
+    ) -> Self {
+        Self {
+            gltf: Arc::clone(gltf),
+            index,
+            primitives,
+            weights
+        }
+    }
+
+    pub fn new_empty(
+        gltf: &Arc<Mutex<LoadedGltf<'a>>>,
+        index: usize
+    ) -> Self {
+        Self::new(gltf, index, Vec::new(), Vec::new())
+    }
+
+    pub fn new_from_mesh(
+        gltf: &Arc<Mutex<LoadedGltf<'a>>>,
+        mesh: &Mesh
+    ) -> Self {
+        let index = mesh.index();
+        let mut primitives = Vec::new();
+        mesh.primitives().for_each(|it| {
+            let primitive_info =
+                mesh::PrimitiveInfo::new_from_primitive(&it);
+            primitives.push(primitive_info);
+        });
+        let mut weights_info = Vec::new();
+        if let Some(weights) = mesh.weights() {
+            weights.iter().for_each(|it| {
+                weights_info.push(it.clone());
+            });
+        };
+        Self::new(gltf, index, primitives, weights_info)
+    }
+
+    pub fn gltf(&self) -> &Arc<Mutex<LoadedGltf<'a>>> {
+        &self.gltf
+    }
+
+    pub fn index(&self) -> usize {
+        self.index
+    }
+
+    pub fn primitives(&self) -> &Vec<mesh::PrimitiveInfo> {
+        &self.primitives
+    }
+
+    pub fn weights(&self) -> &Vec<f32> {
+        &self.weights
+    }
+}
+
 impl<'a> LoadedGltf<'a> {
     pub fn new() -> Self {
         Self {
@@ -987,7 +1056,8 @@ impl<'a> LoadedGltf<'a> {
             images: Vec::new(),
             samplers: Vec::new(),
             textures: Vec::new(),
-            materials: Vec::new()
+            materials: Vec::new(),
+            meshes: Vec::new()
         }
     }
 
@@ -1045,6 +1115,14 @@ impl<'a> LoadedGltf<'a> {
 
     pub fn materials_mut(&mut self) -> &mut Vec<LoadedGltfMaterial<'a>> {
         &mut self.materials
+    }
+
+    pub fn meshes(&self) -> &Vec<LoadedGltfMesh<'a>> {
+        &self.meshes
+    }
+
+    pub fn meshes_mut(&mut self) -> &mut Vec<LoadedGltfMesh<'a>> {
+        &mut self.meshes
     }
 }
 

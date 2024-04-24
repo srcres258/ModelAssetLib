@@ -15,6 +15,7 @@ pub use loaded::LoadedGltfTexture;
 pub use loaded::LoadedGltfMaterial;
 pub use loaded::LoadedGltf;
 pub use loaded::LoadedGltfWrapper;
+pub use loaded::LoadedGltfMesh;
 
 pub type GltfVecNum = f32;
 

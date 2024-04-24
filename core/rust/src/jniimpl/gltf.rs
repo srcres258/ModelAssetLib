@@ -8,7 +8,7 @@ use anyhow::Result;
 use gltf::{buffer, image};
 use jni::sys::{jbyte, jbyteArray, jsize};
 use crate::util;
-use crate::util::gltf::{LoadedGltfAccessor, LoadedGltf, LoadedGltfBuffer, LoadedGltfWrapper, LoadedGltfImage, LoadedGltfBufferView, LoadedGltfSampler, LoadedGltfTexture, LoadedGltfMaterial};
+use crate::util::gltf::{LoadedGltfAccessor, LoadedGltf, LoadedGltfBuffer, LoadedGltfWrapper, LoadedGltfImage, LoadedGltfBufferView, LoadedGltfSampler, LoadedGltfTexture, LoadedGltfMaterial, LoadedGltfMesh};
 
 pub fn get_native_callback<'a>(
     env: &mut JNIEnv<'a>,
@@ -257,7 +257,12 @@ pub fn load_gltf<'a>(
     });
 
     // Load meshes.
-    // TODO
+    gltf_obj.meshes().for_each(|it| {
+        let mut loaded_gltf = loaded_gltf_wrapper.get().lock().unwrap();
+        let loaded_mesh = LoadedGltfMesh::new_from_mesh(
+            loaded_gltf_wrapper.get(), &it);
+        loaded_gltf.meshes_mut().push(loaded_mesh);
+    });
 
     // Load cameras.
     // TODO
